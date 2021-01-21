@@ -3,9 +3,9 @@ package org.example.seabattle;
 public class Sector {
     private int coordinateX;
     private int coordinateY;
-    private char status;
+    private String status;
 
-    public Sector(int coordinateX, int coordinateY, char status) {
+    public Sector(int coordinateX, int coordinateY, String status) {
         this.coordinateX = coordinateX;
         this.coordinateY = coordinateY;
         this.status = status;
@@ -19,7 +19,7 @@ public class Sector {
         return coordinateY;
     }
 
-    public char getStatus() {
+    public String getStatus() {
         return status;
     }
 }

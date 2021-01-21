@@ -1,9 +1,9 @@
 package org.example.seabattle;
 
 public class Ship {
-    private String type;
-    private short orientation;
-    private int damage;
+    private final String type;
+    private final short orientation;
+    private final int damage;
 
     public Ship(String type, short orientation, int damage) {
         this.type = type;
