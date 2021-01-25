@@ -2,24 +2,30 @@ package org.example.seabattle;
 
 public class Ship {
     private final String type;
-    private final short orientation;
-    private final int damage;
+    private int orientation;
+    private int damage;
 
-    public Ship(String type, short orientation, int damage) {
+    public Ship(String type) {
         this.type = type;
-        this.orientation = orientation;
-        this.damage = damage;
     }
 
     public String getType() {
         return type;
     }
 
-    public short getOrientation() {
+    public int getOrientation() {
         return orientation;
     }
 
     public int getDamage() {
         return damage;
+    }
+
+    public void setOrientation(int orientation) {
+        this.orientation = orientation;
+    }
+
+    public void setDamage(int damage) {
+        this.damage = damage;
     }
 }

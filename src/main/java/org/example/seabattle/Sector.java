@@ -1,25 +1,36 @@
 package org.example.seabattle;
 
 public class Sector {
-    private int coordinateX;
-    private int coordinateY;
+    private final int player;
+    private final int coordinateX;
+    private final int coordinateY;
     private String status;
 
-    public Sector(int coordinateX, int coordinateY, String status) {
-        this.coordinateX = coordinateX;
+
+    public Sector(int player, int coordinateY, int coordinateX) {
+        this.player = player;
         this.coordinateY = coordinateY;
-        this.status = status;
+        this.coordinateX = coordinateX;
     }
 
-    public int getCoordinateX() {
-        return coordinateX;
+    public String getStatus() {
+        return status;
     }
 
     public int getCoordinateY() {
         return coordinateY;
     }
 
-    public String getStatus() {
-        return status;
+    public int getCoordinateX() {
+        return coordinateX;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    @Override
+    public String toString() {
+        return "coordinateY=" + coordinateY + ", coordinateX=" + coordinateX;
     }
 }
