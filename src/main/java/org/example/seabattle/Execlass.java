@@ -9,6 +9,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.TextAlignment;
 import javafx.scene.transform.Rotate;
@@ -90,12 +91,18 @@ public class Execlass extends Application{
         for (int i = 0; i < 8; i ++) {
             grid3.getRowConstraints().add(rowConstr);
         }
-        int sidePaneX = 1;
-        int sidePaneY = 1;
+        int sidePaneValueX = 1;
+        int sidePaneValueY = 1;
         for (int i = 0; i < 40; i ++) {
             Pane sidePane = new Pane();
-            grid3.add(sidePane, sidePaneY, sidePaneX);
-            sidePaneX ++;
+            Rectangle rectangle = new Rectangle();
+            rectangle.setSize(20, 20);
+            if (sidePaneValueX > 5) {
+                sidePaneValueX = 1;
+                sidePaneValueY ++;
+            }
+            grid3.add(sidePane, sidePaneValueY, sidePaneValueX);
+            sidePaneValueX ++;
         }
 
         for (int i = 0; i < 10; i ++) {
