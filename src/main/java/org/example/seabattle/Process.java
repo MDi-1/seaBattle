@@ -2,7 +2,7 @@ package org.example.seabattle;
 /*
 program posiada opcję gry na 2 graczy - dlatego nie będzie 2 osobnych funkcji na ruch gracza i ruch komputera, tylko ruch gracza oznaczony jako AI będzie uzupełniony o ruch AI.
 
-task - jak starczy czasu zastosować "stream-y"
+Do zrobienia później - jak starczy czasu zastosować "stream-y"
 */
 import java.util.LinkedList;
 import java.util.List;
@@ -12,8 +12,8 @@ public class Process {
     // 0 = placement; 1 = tura gracz1; 2 = tura gracz2
     private int gamestate = 0;
     private Ship unitInProcess;
-    private List<Sector> p1area = new LinkedList<>();
-    private List<Sector> p2area = new LinkedList<>();
+    private List<Sector> p1sectors = new LinkedList<>();
+    private List<Sector> p2sectors = new LinkedList<>();
     List<Ship> fleet = new LinkedList<>();
 
     // coś tu jest pomylone z X i Y, albo sidePaneValueX i sidePaneValueY
@@ -21,8 +21,8 @@ public class Process {
         for (int i = 0; i < 100; i ++) {
             int y = i / 10;
             int x = i - y * 10;
-            p1area.add(new Sector(1, y, x));
-            p2area.add(new Sector(2, y, x));
+            p1sectors.add(new Sector(1, y, x));
+            p2sectors.add(new Sector(2, y, x));
         }
 //        int sidePaneValueX = 0;
 //        int sidePaneValueY = 0;
@@ -53,15 +53,12 @@ public class Process {
         } System.out.println("gamestate= " + gamestate);
     }
 
-     String placeUnit() {
+    String placeUnit() {
         String type = unitInProcess.getType().substring(0, 3);
         fleet.remove(unitInProcess);
         this.unitInProcess = null;
-        if (fleet.size() == 0) {
-            this.gamestate ++;
-        }
         return type;
-     }
+    }
 
     //funkcja salwy - być może do kasacji bo jest w Execlass
     int shoot(Sector sector, int gamestate) {
@@ -86,12 +83,12 @@ public class Process {
         return unitInProcess;
     }
 
-    public List<Sector> getP1area() {
-        return p1area;
+    public List<Sector> getP1sectors() {
+        return p1sectors;
     }
 
-    public List<Sector> getP2area() {
-        return p2area;
+    public List<Sector> getP2sectors() {
+        return p2sectors;
     }
 
     public List<Ship> getFleet() {

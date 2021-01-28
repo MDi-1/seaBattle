@@ -7,22 +7,22 @@ public class Sector {
     private String status;
 
 
-    public Sector(int player, int coordinateY, int coordinateX) {
+    public Sector(int player, int coordinateX, int coordinateY) {
         this.player = player;
-        this.coordinateY = coordinateY;
         this.coordinateX = coordinateX;
+        this.coordinateY = coordinateY;
     }
 
     public String getStatus() {
         return status;
     }
 
-    public int getCoordinateY() {
-        return coordinateY;
-    }
-
     public int getCoordinateX() {
         return coordinateX;
+    }
+
+    public int getCoordinateY() {
+        return coordinateY;
     }
 
     public void setStatus(String status) {
@@ -31,6 +31,6 @@ public class Sector {
 
     @Override
     public String toString() {
-        return "coordinateY=" + coordinateY + ", coordinateX=" + coordinateX;
+        return "coordinateX= " + coordinateX + " , coordinateY= " + coordinateY;
     }
 }

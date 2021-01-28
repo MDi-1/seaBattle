@@ -36,14 +36,25 @@ public class Execlass extends Application{
     Button starterBtn = new Button("START GAME");
     Button p1beginBtn = new Button("PLAYER 1  DEPLOY UNITS");
     Button p2beginBtn = new Button("PLAYER 2  DEPLOY UNITS");
+    Button rotateBtn  = new Button("ROTATE");
     ImageView carrierIcon = new ImageView(x4unit);
     ImageView cruiserIcon = new ImageView(x3unit);
     ImageView submarineIcon = new ImageView(x2unit);
     ImageView helicoptrIcon = new ImageView(x1unit);
+    Rotate rotate = new Rotate();
     private final Process process = new Process();
 
     public static void main(String[] args) {
         launch(args);
+    }
+
+    void changeState() {
+        int i = process.getGamestate() + 1;
+        process.setGamestate(i);
+        if (process.getGamestate() == 2) {
+            grid2.add(p2beginBtn, 2, 4, 7, 1);
+        }
+        // TASK - sektory mają być klikalne
     }
 
     void buttonActions() {
@@ -51,17 +62,17 @@ public class Execlass extends Application{
             case 0:
                 grid3.getChildren().remove(starterBtn);
                 grid1.add(p1beginBtn, 2, 4, 7, 1);
-                process.setGamestate(1);                    // fixme - to powinno być w klasie Process
+                process.setGamestate(1);                    // to powinno być w klasie Process
                 break;
             case 1:
-                process.createUnits();                      // fixme - to powinno być w klasie Process
+                process.createUnits();                      // to powinno być w klasie Process
                 grid1.getChildren().remove(p1beginBtn);
-                grid2.add(p2beginBtn, 2, 4, 7, 1);
+                grid3.add(rotateBtn, 1, 8, 3, 1);
                 prepareFleet();
                 break;
             case 3:
-                process.setGamestate(3);                    // fixme - to powinno być w klasie Process
-                process.createUnits();                      // fixme - to powinno być w klasie Process
+                process.setGamestate(3);                    // to powinno być w klasie Process
+                process.createUnits();                      // to powinno być w klasie Process
                 grid2.getChildren().remove(p2beginBtn);
                 prepareFleet();
             default:                                        // coś tu trzeba wpisać
@@ -82,6 +93,7 @@ public class Execlass extends Application{
     void pick(String fullType) {
         label.setText("deploy " + fullType);
         process.pickUnit(fullType);
+        // TASK - wywołuje process.f(x) odczyt sektorów proximity i dodaje grafikę do siatki
     }
 
     // później tutaj można dać łapanie wyjątku "out of bounds" gdy wywołana lista nie jest jeszcze utworzona albo
@@ -89,17 +101,38 @@ public class Execlass extends Application{
     void place(Sector sector) {
         if (process.getUnitInProcess() == null) {
             label.setText("pick the ship");
-    // później zrobić tak by można było klikać do wyczerpania typów a nie tylko po jednym
             return;
-        }
+        } // później zrobić tak by można było klikać do wyczerpania typów a nie tylko po jednym
+        Image imageName = null;
+        int x = sector.getCoordinateX();
+        int y = sector.getCoordinateY();
+        int offX;
+        int offset = 0;
+        int span = 0;
         switch (process.placeUnit()) {
+            case "car": imageName = x4unit;
+                offset = 1;
+                span = 4;
+                break;
+            case "cru":
+                imageName = x3unit;
+                span = 1;
+                break;
             case "sub":
+                imageName = x2unit;
+                span = 2;
                 break;
             case "hel":
-                ImageView heliIcon = new ImageView(x1unit);
-                grid1.add(heliIcon, sector.getCoordinateY(), sector.getCoordinateX());
+                imageName = x1unit;
+                span = 1;
                 break;
-            default:
+        }
+        ImageView imageview = new ImageView(imageName);
+        grid1.add(imageview, x, y - offset, 1, span);
+        // TASK - wywołuje process.f(x) zapis sektorów zajętych i proximity
+
+        if (process.fleet.size() < 1) {
+            changeState();
         }
     }
 
@@ -130,7 +163,6 @@ public class Execlass extends Application{
         txtBox.setAlignment(Pos.CENTER);
         txtBox.setPadding(new Insets(0, 0, 0, 0));
 
-        Rotate rotate = new Rotate();
         rotate.setPivotX(23);
         rotate.setPivotY(23);
         rotate.setAngle(270);
@@ -160,9 +192,9 @@ public class Execlass extends Application{
         grid2.setGridLinesVisible(true);
         grid3.setGridLinesVisible(true);
 
-        for (Sector sector1p : process.getP1area()) {
+        for (Sector sector1p : process.getP1sectors()) {
             Pane sectorPane1 = new Pane();
-            grid1.add(sectorPane1, sector1p.getCoordinateY(), sector1p.getCoordinateX());
+            grid1.add(sectorPane1, sector1p.getCoordinateX(), sector1p.getCoordinateY());
             sectorPane1.setOnMouseClicked(e -> {
                         if (process.getGamestate() == 1) {
                             place(sector1p);
@@ -173,8 +205,9 @@ public class Execlass extends Application{
                     }
             );
         }
-        for (Sector sector2p : process.getP2area()) {
+        for (Sector sector2p : process.getP2sectors()) {
             Pane sectorPane2 = new Pane();
+            grid2.add(sectorPane2, sector2p.getCoordinateX(), sector2p.getCoordinateY());
             sectorPane2.setOnMouseClicked(e -> {
                         if (process.getGamestate() == 2) {
                             place(sector2p);
@@ -238,6 +271,7 @@ public class Execlass extends Application{
         starterBtn.setFont(new Font("Arial", 20));
         p1beginBtn.setFont(new Font("Arial", 20));
         p2beginBtn.setFont(new Font("Arial", 20));
+        rotateBtn.setFont( new Font("Arial", 20));
 
         grid3.add(starterBtn, 0, 4, 4, 1);
 
@@ -256,3 +290,4 @@ public class Execlass extends Application{
     }
 }
 // task - na koniec pousuwać wszystkie niepotrzebne "System.out.print"
+// później spróbować zrealizować jakiś mechanizm wywołania funkcji jak w nt_inf.txt
