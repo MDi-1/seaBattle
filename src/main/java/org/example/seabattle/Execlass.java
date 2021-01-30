@@ -15,6 +15,8 @@ import javafx.scene.text.TextAlignment;
 import javafx.scene.transform.Rotate;
 import javafx.stage.Stage;
 
+import java.util.List;
+
 public class Execlass extends Application{
     private final Image field = new Image("file:src/main/resources/field.png");
     private final Image x1unit = new Image("file:src/main/resources/unit1.png");
@@ -23,9 +25,11 @@ public class Execlass extends Application{
     private final Image x4unit = new Image("file:src/main/resources/unit4.png");
     private final Image splash = new Image("file:src/main/resources/splash.png");
     private final Image inTarget = new Image("file:src/main/resources/cross.png");
-    private final FlowPane board = new FlowPane();
-    private final Label label = new Label("label label label");
-    private final HBox txtBox = new HBox(label);
+    private final Image proximity = new Image("file:src/main/resources/proximity.png");
+    private final Label label1 = new Label("label1 label1 label1");
+    private final Label label2 = new Label("label2 label2 label2");
+    private final Label label3 = new Label("label3 label3 label3");
+    private final HBox txtBox = new HBox(100, label1, label2, label3);
     private GridPane grid1 = new GridPane();
     private GridPane grid2 = new GridPane();
     private GridPane grid3 = new GridPane();
@@ -79,6 +83,12 @@ public class Execlass extends Application{
         }
     }
 
+    int rotateShip() {
+        int dir = process.rotateUnit();
+        label2.setText("unit's heading: " + dir);
+        return dir;
+    }
+
     void prepareFleet() {
         sidePane4.getChildren().add(carrierIcon);
         sidePane3.getChildren().add(cruiserIcon);
@@ -91,52 +101,109 @@ public class Execlass extends Application{
     }
 
     void pick(String fullType) {
-        label.setText("deploy " + fullType);
+        label1.setText("deploy " + fullType);
         process.pickUnit(fullType);
-        // TASK - wywołuje process.f(x) odczyt sektorów proximity i dodaje grafikę do siatki
+        if (process.getUnitInProcess() != null) {
+            label2.setText("unit's heading: " + process.getUnitInProcess().getHeading());
+        }
     }
 
     // później tutaj można dać łapanie wyjątku "out of bounds" gdy wywołana lista nie jest jeszcze utworzona albo
     // wywołana pickUnit() w switchu nie działa z innych powodów
     void place(Sector sector) {
+        label1.setText("unit deployed");
         if (process.getUnitInProcess() == null) {
-            label.setText("pick the ship");
+            label1.setText("pick the ship first");
             return;
         } // później zrobić tak by można było klikać do wyczerpania typów a nie tylko po jednym
+        Ship exeShip = process.getUnitInProcess();
         Image imageName = null;
         int x = sector.getCoordinateX();
         int y = sector.getCoordinateY();
-        int offX;
-        int offset = 0;
-        int span = 0;
-        switch (process.placeUnit()) {
-            case "car": imageName = x4unit;
-                offset = 1;
-                span = 4;
-                break;
-            case "cru":
-                imageName = x3unit;
-                span = 1;
-                break;
-            case "sub":
-                imageName = x2unit;
-                span = 2;
-                break;
-            case "hel":
-                imageName = x1unit;
-                span = 1;
-                break;
+        int unitSize = process.placeUnit();
+        switch (unitSize) {
+            case 4:  imageName = x4unit;  break;
+            case 3:  imageName = x3unit;  break;
+            case 2:  imageName = x2unit;  break;
+            case 1:  imageName = x1unit;  break;
         }
+        int offset = (unitSize + 1) / 4;
         ImageView imageview = new ImageView(imageName);
-        grid1.add(imageview, x, y - offset, 1, span);
-        // TASK - wywołuje process.f(x) zapis sektorów zajętych i proximity
-
+        grid1.add(imageview, x, y - offset, 1, unitSize);
+        setupSectors(sector, exeShip);
         if (process.fleet.size() < 1) {
             changeState();
         }
+        addPerimeter();
     }
 
-    void shoot(Sector sector) {
+    public void setupSectors(Sector sector, Ship ship) {
+        int unitSize = ship.getShipSize();
+        int heading = ship.getHeading();
+        int offset = (unitSize + 1) / 4;
+
+        int outboundW, outboundE, outboundN, outboundS;
+        outboundW = outboundE = outboundN = outboundS = 0;
+        if (heading == 0) {
+            outboundN = offset;
+            outboundS = unitSize / 2;
+        }
+        if (heading == 270) {
+            outboundW = offset;
+            outboundE = unitSize / 2;
+        }
+        int x = sector.getCoordinateX();
+        int y = sector.getCoordinateY();
+        List<Sector> sectorList = process.getP1sectors();
+
+        System.out.println("outboundW= " + outboundW);
+        System.out.println("outboundE= " + outboundE);
+        System.out.println("outboundN= " + outboundN);
+        System.out.println("outboundS= " + outboundS);
+
+        for (Sector modifiedSector : sectorList) {
+            int setupX = modifiedSector.getCoordinateX();
+            int setupY = modifiedSector.getCoordinateY();
+            for (int u =  -1 - outboundW; u <= 1 + outboundE; u ++) {
+                for (int v = -1 - outboundN; v <= 1 + outboundS; v ++) {
+                    if (u != 0 || v != 0) {
+                        if (setupX == (x + u) && setupY == (y + v)) {
+                            modifiedSector.setStatus("proximity");
+                        }
+                    }
+                }
+            }
+            for (int n = 0; n < unitSize; n ++) {
+                if ((setupX == x) && (setupY == (y - offset + n))) {
+                    System.out.println("setupX= " + setupX + "; setupY= " +  setupY);
+                    modifiedSector.setStatus("hull");
+                }
+            }
+        } sector.setStatus("origin");
+    }
+
+    public void addPerimeter() {
+        List<Sector> sectorList = process.getP1sectors();
+
+        for (Sector readSector : sectorList) {
+            String status = readSector.getStatus();
+            int x = readSector.getCoordinateX();
+            int y = readSector.getCoordinateY();
+
+            if (status != null) {
+                if (status.equals("proximity")) {
+                    ImageView prox = new ImageView(proximity);
+                    grid1.add(prox, x, y);
+                }
+                if (status.equals("hull")) {
+                    ImageView hull = new ImageView(inTarget);
+                    grid1.add(hull, x, y);
+                }
+            }
+        }
+    }
+
+    void fire(Sector sector) {
         // tu powinna być animacja strzału, ale nie będzie bo nie ma czasu.
         String status = sector.getStatus();
         sector.setStatus("hit");
@@ -150,10 +217,11 @@ public class Execlass extends Application{
                 field, BackgroundRepeat.REPEAT, BackgroundRepeat.NO_REPEAT, BackgroundPosition.CENTER, backgroundSize);
         Background background = new Background(backgroundImage);
 
-        board.setAlignment(Pos.TOP_LEFT);
-        board.setBackground(background);
-        board.setPadding(new Insets(72, 0, 0, 77));
-        board.setVgap(20);
+        GridPane grid0 = new GridPane();
+        grid0.setAlignment(Pos.TOP_LEFT);
+        grid0.setBackground(background);
+        grid0.setPadding(new Insets(72, 0, 0, 77));
+        //grid0.setVgap(20);
 
         grid1.setAlignment(Pos.TOP_LEFT);
         grid2.setAlignment(Pos.TOP_LEFT);
@@ -200,7 +268,7 @@ public class Execlass extends Application{
                             place(sector1p);
                         }
                         if (process.getGamestate() == 3) {
-                            shoot(sector1p);
+                            fire(sector1p);
                         }
                     }
             );
@@ -213,7 +281,7 @@ public class Execlass extends Application{
                             place(sector2p);
                         }
                         if (process.getGamestate() == 3) {
-                            shoot(sector2p);
+                            fire(sector2p);
                         }
                     }
             );
@@ -264,10 +332,14 @@ public class Execlass extends Application{
 //        grid3.add(helicoptrIcon, 0, 6);
         // czy da się napisać tak by lambda podała "e" do pick() ?
 
-        label.setPadding(new Insets(0, 120, 0, 120));
-        label.setFont(new Font("Arial", 32));
-        label.setTextFill(Color.web("#FFF"));
-        label.setTextAlignment(TextAlignment.JUSTIFY);
+        label1.setPadding(new Insets(0, 50, 0, 120));
+        label1.setFont(new Font("Arial", 32));
+        label1.setTextFill(Color.web("#FFF"));
+        label1.setTextAlignment(TextAlignment.LEFT);
+        label2.setPadding(new Insets(0, 120, 0, 100));
+        label2.setFont(new Font("Arial", 32));
+        label2.setTextFill(Color.web("#FFF"));
+        label2.setTextAlignment(TextAlignment.JUSTIFY);
         starterBtn.setFont(new Font("Arial", 20));
         p1beginBtn.setFont(new Font("Arial", 20));
         p2beginBtn.setFont(new Font("Arial", 20));
@@ -278,12 +350,14 @@ public class Execlass extends Application{
         starterBtn.setOnAction(e -> buttonActions());
         p1beginBtn.setOnAction(e -> buttonActions());
         p2beginBtn.setOnAction(e -> buttonActions());
-        board.getChildren().add(grid1);
-        board.getChildren().add(grid2);
-        board.getChildren().add(grid3);
-        board.getChildren().add(txtBox);
+        rotateBtn.setOnAction(e ->  rotateShip());
+        grid0.add(grid1, 0, 0);
+        grid0.add(grid2, 1, 0);
+        grid0.add(grid3, 2, 0);
+        grid0.add(label1, 0, 1);
+        grid0.add(label2, 1, 1);
 
-        Scene scene = new Scene(board, 1400, 600, Color.BLACK);
+        Scene scene = new Scene(grid0, 1400, 600, Color.BLACK);
         primaryStage.setTitle("seaBattle");
         primaryStage.setScene(scene);
         primaryStage.show();

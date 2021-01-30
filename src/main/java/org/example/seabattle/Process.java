@@ -12,6 +12,7 @@ public class Process {
     // 0 = placement; 1 = tura gracz1; 2 = tura gracz2
     private int gamestate = 0;
     private Ship unitInProcess;
+    private int heading = 0;
     private List<Sector> p1sectors = new LinkedList<>();
     private List<Sector> p2sectors = new LinkedList<>();
     List<Ship> fleet = new LinkedList<>();
@@ -46,22 +47,38 @@ public class Process {
     }
     void pickUnit(String fullType) {
         for (Ship pickedUnit : fleet) {
-            System.out.print(pickedUnit.getType() + "; ");
-            if (fullType.substring(0, 3).equals(pickedUnit.getType().substring(0, 3))) {
+            System.out.print(pickedUnit.getShipType() + "; ");
+            if (fullType.substring(0, 3).equals(pickedUnit.getShipType().substring(0, 3))) {
                 this.unitInProcess = pickedUnit;
             }
         } System.out.println("gamestate= " + gamestate);
     }
 
-    String placeUnit() {
-        String type = unitInProcess.getType().substring(0, 3);
+    int placeUnit() {
+        int size = unitInProcess.getShipSize();
         fleet.remove(unitInProcess);
         this.unitInProcess = null;
-        return type;
+        return size;
+    }
+
+    int rotateUnit() {
+        int direction = 45;
+        if (getUnitInProcess() != null ) {
+            direction = getUnitInProcess().getHeading();
+        } else {
+            return direction;
+        }
+        if (direction == 0) {
+            direction = 270;
+        } else {
+            direction = 0;
+        }
+        getUnitInProcess().setHeading(direction);
+        return direction;
     }
 
     //funkcja salwy - być może do kasacji bo jest w Execlass
-    int shoot(Sector sector, int gamestate) {
+    int fire(Sector sector, int gamestate) {
         return 0;
     }
 
