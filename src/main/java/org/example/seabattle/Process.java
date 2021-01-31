@@ -17,7 +17,6 @@ public class Process {
     private List<Sector> p2sectors = new LinkedList<>();
     List<Ship> fleet = new LinkedList<>();
 
-    // coś tu jest pomylone z X i Y, albo sidePaneValueX i sidePaneValueY
     public Process() {
         for (int i = 0; i < 100; i ++) {
             int y = i / 10;
@@ -47,17 +46,83 @@ public class Process {
     }
     void pickUnit(String fullType) {
         for (Ship pickedUnit : fleet) {
-            System.out.print(pickedUnit.getShipType() + "; ");
             if (fullType.substring(0, 3).equals(pickedUnit.getShipType().substring(0, 3))) {
                 this.unitInProcess = pickedUnit;
+                System.out.print(pickedUnit.getShipType() + "; ");
             }
         } System.out.println("gamestate= " + gamestate);
+    }
+
+    public void setupSectors(Sector sector, Ship exeShip) {
+        int unitSize = exeShip.getShipSize();
+        int heading = exeShip.getHeading();
+        int offset = (unitSize + 1) / 4;
+
+        int outboundW, outboundE, outboundN, outboundS;
+        outboundW = outboundE = outboundN = outboundS = 0;
+        if (heading == 0) {
+            outboundN = offset;
+            outboundS = unitSize / 2;
+        }
+        if (heading == 270) {
+            outboundW = offset;
+            outboundE = unitSize / 2;
+        }
+        int x = sector.getCoordinateX();
+        int y = sector.getCoordinateY();
+        List<Sector> sectorList = getP1sectors();
+
+        for (Sector modifiedSector : sectorList) {
+            int setupX = modifiedSector.getCoordinateX();
+            int setupY = modifiedSector.getCoordinateY();
+            for (int u =  -1 - outboundW; u <= 1 + outboundE; u ++) {
+                for (int v = -1 - outboundN; v <= 1 + outboundS; v ++) {
+                    if (u != 0 || v != 0) {
+                        if (setupX == (x + u) && setupY == (y + v)) {
+                            modifiedSector.setStatus("proximity");
+                        }
+                    }
+                }
+            }
+        }
+        alignHull(sector, exeShip);
+        sector.setStatus("origin");
+    }
+
+    void alignHull(Sector passedSector, Ship exeShip) {
+        int unitSize = exeShip.getShipSize();
+        int heading = exeShip.getHeading();
+        int offset = (unitSize + 1) / 4;
+        int x = passedSector.getCoordinateX();
+        int y = passedSector.getCoordinateY();
+
+        for (Sector iteratedSector : getP1sectors()) {
+            int setupX = iteratedSector.getCoordinateX();
+            int setupY = iteratedSector.getCoordinateY();
+
+            for (int n = 0; n < unitSize; n ++) {
+                switch (heading) {
+                    case 0:
+                        if ((setupX == x) && (setupY == (y - offset + n))) {
+                            iteratedSector.setStatus("hull");
+                        }
+                        break;
+                    case 270:
+                        if ((setupX == x - offset + n) && (setupY == y)) {
+                            iteratedSector.setStatus("hull");
+                        }
+                        break;
+                    default:
+                }
+            }
+        }
     }
 
     int placeUnit() {
         int size = unitInProcess.getShipSize();
         fleet.remove(unitInProcess);
         this.unitInProcess = null;
+        System.out.println("unit removed");
         return size;
     }
 

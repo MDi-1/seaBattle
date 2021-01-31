@@ -1,8 +1,10 @@
 package org.example.seabattle;
 
 import javafx.application.Application;
+import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -10,11 +12,13 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.TextAlignment;
 import javafx.scene.transform.Rotate;
 import javafx.stage.Stage;
 
+import java.util.LinkedList;
 import java.util.List;
 
 public class Execlass extends Application{
@@ -28,8 +32,6 @@ public class Execlass extends Application{
     private final Image proximity = new Image("file:src/main/resources/proximity.png");
     private final Label label1 = new Label("label1 label1 label1");
     private final Label label2 = new Label("label2 label2 label2");
-    private final Label label3 = new Label("label3 label3 label3");
-    private final HBox txtBox = new HBox(100, label1, label2, label3);
     private GridPane grid1 = new GridPane();
     private GridPane grid2 = new GridPane();
     private GridPane grid3 = new GridPane();
@@ -66,20 +68,20 @@ public class Execlass extends Application{
             case 0:
                 grid3.getChildren().remove(starterBtn);
                 grid1.add(p1beginBtn, 2, 4, 7, 1);
-                process.setGamestate(1);                    // to powinno być w klasie Process
+                process.setGamestate(1);                  // to powinno być w klasie Process
                 break;
             case 1:
-                process.createUnits();                      // to powinno być w klasie Process
+                process.createUnits();                    // to powinno być w klasie Process
                 grid1.getChildren().remove(p1beginBtn);
                 grid3.add(rotateBtn, 1, 8, 3, 1);
                 prepareFleet();
                 break;
             case 3:
-                process.setGamestate(3);                    // to powinno być w klasie Process
-                process.createUnits();                      // to powinno być w klasie Process
+                process.setGamestate(3);                  // to powinno być w klasie Process
+                process.createUnits();                    // to powinno być w klasie Process
                 grid2.getChildren().remove(p2beginBtn);
                 prepareFleet();
-            default:                                        // coś tu trzeba wpisać
+            default:                                      // coś tu trzeba wpisać
         }
     }
 
@@ -107,6 +109,19 @@ public class Execlass extends Application{
             label2.setText("unit's heading: " + process.getUnitInProcess().getHeading());
         }
     }
+//    void projectUnit(Sector sectorUnderCursor) {
+//        process.alignHull(sectorUnderCursor, process.getUnitInProcess());
+//        for (Sector sector : process.getP1sectors()) {
+//            if (sector.getStatus().equals("hull")) {
+//                Rectangle rectangle = new Rectangle(30, 30, Color.TRANSPARENT);
+//                rectangle.setX(8);
+//                rectangle.setY(8);
+//                rectangle.setStroke(Color.valueOf("#00ff00"));
+//                rectangle.setStrokeWidth(2);
+//                grid1.add(rectangle, sector.getCoordinateX(), sector.getCoordinateY());
+//            }
+//        }
+//    }
 
     // później tutaj można dać łapanie wyjątku "out of bounds" gdy wywołana lista nie jest jeszcze utworzona albo
     // wywołana pickUnit() w switchu nie działa z innych powodów
@@ -129,63 +144,23 @@ public class Execlass extends Application{
         }
         int offset = (unitSize + 1) / 4;
         ImageView imageview = new ImageView(imageName);
-        grid1.add(imageview, x, y - offset, 1, unitSize);
-        setupSectors(sector, exeShip);
+        if (exeShip.getHeading() == 270) {
+            imageview.getTransforms().add(rotate);
+            grid1.add(imageview, x - offset, y, 1, unitSize);
+        } else {
+            grid1.add(imageview, x, y - offset, 1, unitSize);
+        }
+                    // task - dodać siatkę z zamienionym x i y;
+                    //  to może być potrzebne do możliwości klikania w celu odzyskania jednostki
+        process.setupSectors(sector, exeShip);
         if (process.fleet.size() < 1) {
             changeState();
         }
         addPerimeter();
     }
 
-    public void setupSectors(Sector sector, Ship ship) {
-        int unitSize = ship.getShipSize();
-        int heading = ship.getHeading();
-        int offset = (unitSize + 1) / 4;
-
-        int outboundW, outboundE, outboundN, outboundS;
-        outboundW = outboundE = outboundN = outboundS = 0;
-        if (heading == 0) {
-            outboundN = offset;
-            outboundS = unitSize / 2;
-        }
-        if (heading == 270) {
-            outboundW = offset;
-            outboundE = unitSize / 2;
-        }
-        int x = sector.getCoordinateX();
-        int y = sector.getCoordinateY();
-        List<Sector> sectorList = process.getP1sectors();
-
-        System.out.println("outboundW= " + outboundW);
-        System.out.println("outboundE= " + outboundE);
-        System.out.println("outboundN= " + outboundN);
-        System.out.println("outboundS= " + outboundS);
-
-        for (Sector modifiedSector : sectorList) {
-            int setupX = modifiedSector.getCoordinateX();
-            int setupY = modifiedSector.getCoordinateY();
-            for (int u =  -1 - outboundW; u <= 1 + outboundE; u ++) {
-                for (int v = -1 - outboundN; v <= 1 + outboundS; v ++) {
-                    if (u != 0 || v != 0) {
-                        if (setupX == (x + u) && setupY == (y + v)) {
-                            modifiedSector.setStatus("proximity");
-                        }
-                    }
-                }
-            }
-            for (int n = 0; n < unitSize; n ++) {
-                if ((setupX == x) && (setupY == (y - offset + n))) {
-                    System.out.println("setupX= " + setupX + "; setupY= " +  setupY);
-                    modifiedSector.setStatus("hull");
-                }
-            }
-        } sector.setStatus("origin");
-    }
-
     public void addPerimeter() {
-        List<Sector> sectorList = process.getP1sectors();
-
-        for (Sector readSector : sectorList) {
+        for (Sector readSector : process.getP1sectors()) {
             String status = readSector.getStatus();
             int x = readSector.getCoordinateX();
             int y = readSector.getCoordinateY();
@@ -214,22 +189,28 @@ public class Execlass extends Application{
 
         BackgroundSize backgroundSize = new BackgroundSize(100, 100, true, true, true, false);
         BackgroundImage backgroundImage = new BackgroundImage(
-                field, BackgroundRepeat.REPEAT, BackgroundRepeat.NO_REPEAT, BackgroundPosition.CENTER, backgroundSize);
+                field, BackgroundRepeat.REPEAT,BackgroundRepeat.NO_REPEAT, BackgroundPosition.CENTER, backgroundSize);
         Background background = new Background(backgroundImage);
+
+        Rectangle rectangle1 = new Rectangle(30, 30, Color.TRANSPARENT);
+        Rectangle rectangle2 = new Rectangle(30, 30, Color.TRANSPARENT);
+        Rectangle rectangle3 = new Rectangle(30, 30, Color.TRANSPARENT);
+        Rectangle rectangle4 = new Rectangle(30, 30, Color.TRANSPARENT);
+        rectangle1.setX(8);
+        rectangle1.setY(8);
+        rectangle1.setStroke(Color.valueOf("#00ff00"));
+        rectangle1.setStrokeWidth(2);
 
         GridPane grid0 = new GridPane();
         grid0.setAlignment(Pos.TOP_LEFT);
         grid0.setBackground(background);
         grid0.setPadding(new Insets(72, 0, 0, 77));
-        //grid0.setVgap(20);
 
         grid1.setAlignment(Pos.TOP_LEFT);
         grid2.setAlignment(Pos.TOP_LEFT);
         grid2.setPadding(new Insets(0, 0, 0, 92));
         grid3.setAlignment(Pos.TOP_LEFT);
         grid3.setPadding(new Insets(0, 0, 0, 46));
-        txtBox.setAlignment(Pos.CENTER);
-        txtBox.setPadding(new Insets(0, 0, 0, 0));
 
         rotate.setPivotX(23);
         rotate.setPivotY(23);
@@ -254,7 +235,6 @@ public class Execlass extends Application{
             grid2.getColumnConstraints().add(cConstr);
             grid2.getRowConstraints().add(rowConstr);
         }
-
         // siatka do usunięcia później
         grid1.setGridLinesVisible(true);
         grid2.setGridLinesVisible(true);
@@ -263,28 +243,34 @@ public class Execlass extends Application{
         for (Sector sector1p : process.getP1sectors()) {
             Pane sectorPane1 = new Pane();
             grid1.add(sectorPane1, sector1p.getCoordinateX(), sector1p.getCoordinateY());
+            sectorPane1.setOnMouseEntered(e -> {
+                if (process.getUnitInProcess() != null) {
+                        sectorPane1.getChildren().add(rectangle1);
+                }
+            });
             sectorPane1.setOnMouseClicked(e -> {
-                        if (process.getGamestate() == 1) {
-                            place(sector1p);
-                        }
-                        if (process.getGamestate() == 3) {
-                            fire(sector1p);
-                        }
-                    }
-            );
+                if (process.getGamestate() == 1) {
+                    place(sector1p);
+                }
+                if (process.getGamestate() == 3) {
+                    fire(sector1p);
+                }
+            });
+            sectorPane1.setOnMouseExited(e -> sectorPane1.getChildren().removeAll());
         }
+
+        // niepotrzebnie dla II gracza jest to powtórzone
         for (Sector sector2p : process.getP2sectors()) {
             Pane sectorPane2 = new Pane();
             grid2.add(sectorPane2, sector2p.getCoordinateX(), sector2p.getCoordinateY());
             sectorPane2.setOnMouseClicked(e -> {
-                        if (process.getGamestate() == 2) {
-                            place(sector2p);
-                        }
-                        if (process.getGamestate() == 3) {
-                            fire(sector2p);
-                        }
-                    }
-            );
+                if (process.getGamestate() == 2) {
+                    place(sector2p);
+                }
+                if (process.getGamestate() == 3) {
+                    fire(sector2p);
+                }
+            }   );
         }
         sidePane4.setOnMouseClicked(e -> pick("carrier"));
         sidePane3.setOnMouseClicked(e -> pick("cruiser"));
@@ -325,11 +311,6 @@ public class Execlass extends Application{
         }
         // koniec bloku tymczasowego
 
-
-//        grid3.add(carrierIcon, 0, 0, 4, 2);
-//        grid3.add(cruiserIcon, 0, 2, 4, 1);
-//        grid3.add(submarineIcon, 0, 4, 1, 1);
-//        grid3.add(helicoptrIcon, 0, 6);
         // czy da się napisać tak by lambda podała "e" do pick() ?
 
         label1.setPadding(new Insets(0, 50, 0, 120));

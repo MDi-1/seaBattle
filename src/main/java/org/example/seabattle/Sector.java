@@ -4,7 +4,7 @@ public class Sector {
     private final int player;
     private final int coordinateX;
     private final int coordinateY;
-    private String status;
+    private String status = "nothing";
 
 
     public Sector(int player, int coordinateX, int coordinateY) {
