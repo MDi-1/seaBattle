@@ -1,10 +1,8 @@
 package org.example.seabattle;
 
 import javafx.application.Application;
-import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -18,8 +16,7 @@ import javafx.scene.text.TextAlignment;
 import javafx.scene.transform.Rotate;
 import javafx.stage.Stage;
 
-import java.util.LinkedList;
-import java.util.List;
+import java.util.Timer;
 
 public class Execlass extends Application{
     private final Image field = new Image("file:src/main/resources/field.png");
@@ -240,12 +237,14 @@ public class Execlass extends Application{
         grid2.setGridLinesVisible(true);
         grid3.setGridLinesVisible(true);
 
+        /*
         for (Sector sector1p : process.getP1sectors()) {
             Pane sectorPane1 = new Pane();
             grid1.add(sectorPane1, sector1p.getCoordinateX(), sector1p.getCoordinateY());
             sectorPane1.setOnMouseEntered(e -> {
                 if (process.getUnitInProcess() != null) {
                         sectorPane1.getChildren().add(rectangle1);
+                        System.out.println(sector1p.getCoordinateX() + "; " + sector1p.getCoordinateY());
                 }
             });
             sectorPane1.setOnMouseClicked(e -> {
@@ -259,7 +258,88 @@ public class Execlass extends Application{
             sectorPane1.setOnMouseExited(e -> sectorPane1.getChildren().removeAll());
         }
 
+         */
+
+        System.out.println();
+        Pane[] paneArray = new Pane[100];
+        int k = 0;
+        int[] array1 = {0, 10, 1};
+        for (Sector sector : process.getP1sectors()) {
+            paneArray[k] = new Pane();
+            grid1.add(paneArray[k], sector.getCoordinateX(), sector.getCoordinateY());
+            int j = k;
+            paneArray[k].setOnMouseEntered(e -> {
+                        //if (process.getUnitInProcess() != null) {
+                        for (int a : array1) {
+                            Rectangle rectangle_x = new Rectangle(30, 30, Color.TRANSPARENT);
+                            rectangle_x.setX(8);
+                            rectangle_x.setY(8);
+                            rectangle_x.setStroke(Color.valueOf("#00ff00"));
+                            rectangle_x.setStrokeWidth(2);
+                            paneArray[j + a].getChildren().add(rectangle_x);
+                            System.out.print(j + "; ");
+                        }
+                    }
+            );
+            paneArray[k].setOnMouseExited(e -> {
+                        for (int a : array1) {
+                                paneArray[j + a].getChildren().removeAll(paneArray[j + a].getChildren());
+                        }
+            });
+            k++;
+        }
+
+
+
+        // TESTING AREA BEGIN
+        Button addBtn = new Button("add");   addBtn.setFont(new Font("Arial", 20));
+        grid2.add(addBtn, 7, 4, 3, 1);
+        addBtn.setOnMouseClicked(e -> {
+            int i = 0;
+            for (Sector sector1p : process.getP1sectors()) {
+                Label label = new Label("i: " + i);
+                label.setFont(new Font("Arial", 18));
+                int x = sector1p.getCoordinateX();
+                int y = sector1p.getCoordinateY();
+                grid1.add(label, x, y);
+                i ++;
+            }
+        });
+
+        /*
+        Pane[] pane = new Pane[2];
+        pane[0] = new Pane();
+        pane[1] = new Pane();
+        grid1.add(pane[0], 9, 9);
+        grid1.add(pane[1], 8, 9);
+        Button press2show = new Button("on");   press2show.setFont(new Font("Arial", 20));
+        Button press2hide = new Button("off");  press2hide.setFont(new Font("Arial", 20));
+        grid2.add(press2show, 7, 0, 3, 1);
+        grid2.add(press2hide, 7, 2, 3, 1);
+        press2show.setOnMouseClicked(e -> {
+            for (Pane single_pane : pane) {
+                Rectangle square = new Rectangle(30, 30, Color.TRANSPARENT);
+                square.setX(8);
+                square.setY(8);
+                square.setStroke(Color.valueOf("#00ff00"));
+                square.setStrokeWidth(2);
+                single_pane.getChildren().add(square);
+            }
+        });
+        press2hide.setOnMouseClicked(e -> {
+            pane[0].getChildren().removeAll(pane[0].getChildren());
+            pane[1].getChildren().removeAll(pane[1].getChildren());
+
+        });
+
+         */
+
+        // TESTING AREA END
+
         // niepotrzebnie dla II gracza jest to powtórzone
+
+        /*
+        todo - UNCOMMENT THAT LATER
         for (Sector sector2p : process.getP2sectors()) {
             Pane sectorPane2 = new Pane();
             grid2.add(sectorPane2, sector2p.getCoordinateX(), sector2p.getCoordinateY());
@@ -272,32 +352,13 @@ public class Execlass extends Application{
                 }
             }   );
         }
+         */
+
+
         sidePane4.setOnMouseClicked(e -> pick("carrier"));
         sidePane3.setOnMouseClicked(e -> pick("cruiser"));
         sidePane2.setOnMouseClicked(e -> pick("submarine"));
         sidePane1.setOnMouseClicked(e -> pick("helicopter"));
-
-        /*
-        int sidePaneValueX = 0;
-        int sidePaneValueY = 0;
-        for (int i = 0; i < 40; i ++) {
-            Pane sidePane = new Pane();
-         prostokąt celem sprawdzenia
-            Rectangle rectangle = new Rectangle();
-            rectangle.setX(18);
-            rectangle.setY(18);
-            rectangle.setWidth(10);
-            rectangle.setHeight(10);
-            rectangle.setFill(Color.valueOf("#00ffff"));
-            sidePane.getChildren().add(rectangle);
-            if (sidePaneValueX > 4) {
-                sidePaneValueX = 0;
-                sidePaneValueY ++;
-            }
-            grid3.add(sidePane, sidePaneValueX, sidePaneValueY);
-            sidePaneValueX ++;
-        }
-         */
 
         // blok tymczasowy - sprawdzanie jak działa "colspan, rowspan"
         ImageView heliIco = new ImageView(x1unit);
