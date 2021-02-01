@@ -298,14 +298,18 @@ public class Execlass extends Application{
 //                        if (valueX < 0 || valueY < 0) {
 //                            rectangle.setStroke(Color.valueOf("#ff0000"));
 //                        }
-                        paneArray[j + h].getChildren().add(rectangle);
+                        if ((j + h) >= 0 && (j + h) < 100) {
+                            paneArray[j + h].getChildren().add(rectangle);
+                        }
                     }
                 }
             });
             paneArray[k].setOnMouseExited(e -> {
                 if (process.getUnitInProcess() != null) {
                     for (int h : hullSectors) {
-                        paneArray[j + h].getChildren().removeAll(paneArray[j + h].getChildren());
+                        if ((j + h) >= 0 && (j + h) < 100) {
+                            paneArray[j + h].getChildren().removeAll(paneArray[j + h].getChildren());
+                        }
                     }
                 }
             });
