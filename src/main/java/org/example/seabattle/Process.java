@@ -85,8 +85,6 @@ public class Process {
                 }
             }
         }
-        alignHull(sector, exeShip);
-        sector.setStatus("origin");
     }
 
     void alignHull(Sector passedSector, Ship exeShip) {
@@ -115,15 +113,17 @@ public class Process {
                     default:
                 }
             }
-        }
+        } passedSector.setStatus("origin");
     }
 
-    int placeUnit() {
+    void placeUnit(int locationX, int locationY) {
         int size = unitInProcess.getShipSize();
+        String type = unitInProcess.getShipType(); // this line is just for println
+        unitInProcess.setLocationX(locationX);
+        unitInProcess.setLocationY(locationY);
         fleet.remove(unitInProcess);
         this.unitInProcess = null;
-        System.out.println("unit removed");
-        return size;
+        System.out.println("unit removed: " + type);
     }
 
     int rotateUnit() {

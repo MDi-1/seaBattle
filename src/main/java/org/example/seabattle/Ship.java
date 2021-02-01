@@ -5,12 +5,14 @@ public class Ship {
     private int damage;
     private int heading = 0;
     private int shipSize;
+    private int locationX = 0;
+    private int locationY = 0;
 
     public Ship(String type) {
         this.shipType = type;
 
         switch (type.substring(0, 3)) {
-            case "car":  this.shipSize = 4;  break;
+            case "car":  this.shipSize = 4;   break;
             case "cru":  this.shipSize = 3;  break;
             case "sub":  this.shipSize = 2;  break;
             case "hel":  this.shipSize = 1;  break;
@@ -33,6 +35,14 @@ public class Ship {
         return shipSize;
     }
 
+    public int getLocationX() {
+        return locationX;
+    }
+
+    public int getLocationY() {
+        return locationY;
+    }
+
     public void setDamage(int damage) {
         this.damage = damage;
     }
@@ -41,7 +51,12 @@ public class Ship {
         this.heading = heading;
     }
 
-    public void setupSectors(String shipType) {
-
+    public void setLocationX(int locationX) {
+        this.locationX = locationX;
     }
+
+    public void setLocationY(int locationY) {
+        this.locationY = locationY;
+    }
+
 }
