@@ -4,6 +4,7 @@ program posiada opcję gry na 2 graczy - dlatego nie będzie 2 osobnych funkcji 
 
 Do zrobienia później - jak starczy czasu zastosować "stream-y"
 */
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -12,9 +13,9 @@ public class Process {
     // 0 = placement; 1 = tura gracz1; 2 = tura gracz2
     private int gamestate = 0;
     private Ship unitInProcess;
-    private int heading = 0;
     private List<Sector> p1sectors = new LinkedList<>();
     private List<Sector> p2sectors = new LinkedList<>();
+    private List<Sector> dummies = new ArrayList<>();
     List<Ship> fleet = new LinkedList<>();
 
     public Process() {
@@ -53,7 +54,7 @@ public class Process {
         } System.out.println("gamestate= " + gamestate);
     }
 
-    public void setupSectors(Sector sector, Ship exeShip) {
+    public void setupProximity(Sector sector, Ship exeShip) {
         int unitSize = exeShip.getShipSize();
         int heading = exeShip.getHeading();
         int offset = (unitSize + 1) / 4;
@@ -87,37 +88,66 @@ public class Process {
         }
     }
 
-    void alignHull(Sector passedSector, Ship exeShip) {
+    boolean alignHull(Sector passedSector, Ship exeShip, boolean deploying) {
+        if (deploying) System.out.println("-function alignHull in deploying mode-");
+        boolean allSectorsUsed = false;
         int unitSize = exeShip.getShipSize();
         int heading = exeShip.getHeading();
         int offset = (unitSize + 1) / 4;
         int x = passedSector.getCoordinateX();
         int y = passedSector.getCoordinateY();
-
+        int sectorUsage = 0;
+        String st1 = "";
+        String st2 = "";
         for (Sector iteratedSector : getP1sectors()) {
+            st1 = passedSector.getStatus();
+            st2 = iteratedSector.getStatus();
             int setupX = iteratedSector.getCoordinateX();
             int setupY = iteratedSector.getCoordinateY();
-
             for (int n = 0; n < unitSize; n ++) {
+                int modifierX = 0;
+                int modifierY = 0;
                 switch (heading) {
                     case 0:
-                        if ((setupX == x) && (setupY == (y - offset + n))) {
-                            iteratedSector.setStatus("hull");
-                        }
+                        modifierX = 0;
+                        modifierY = n - offset;
                         break;
                     case 270:
-                        if ((setupX == x - offset + n) && (setupY == y)) {
-                            iteratedSector.setStatus("hull");
-                        }
+                        modifierX = n - offset;
+                        modifierY = 0;
                         break;
                     default:
                 }
+                if ((setupX == x + modifierX) && (setupY == y + modifierY)) {
+                    int resultX = x + modifierX;
+                    int resultY = y + modifierY;
+
+                    if (passedSector.getStatus().equals("proximity")) {
+                        System.out.println("proximity issue");
+                    }
+                    if (deploying) {
+                        iteratedSector.setStatus("hull");
+                    } else {
+                        Sector dummy = new Sector(0, resultX, resultY);
+                        dummies.add(dummy);
+                    }// task - zanim ten blok będzie znowu wykonany listę dummies trzeba rozładować.
+                    System.out.print("parsing: x= " + resultX + "; y= " + resultY + " ");
+                    sectorUsage++;
+                }
+                if (sectorUsage == unitSize) {
+                    allSectorsUsed = true;
+                }
             }
-        } passedSector.setStatus("origin");
+        }
+        System.out.println("\n " + st1 + " ; " + st2);
+        if (deploying) {
+            passedSector.setStatus("origin");
+        }
+        System.out.println("sectors placed= " + sectorUsage + "; unitsize = " + unitSize);
+        return allSectorsUsed;
     }
 
     void placeUnit(int locationX, int locationY) {
-        int size = unitInProcess.getShipSize();
         String type = unitInProcess.getShipType(); // this line is just for println
         unitInProcess.setLocationX(locationX);
         unitInProcess.setLocationY(locationY);

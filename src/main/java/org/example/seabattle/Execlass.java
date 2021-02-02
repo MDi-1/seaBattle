@@ -53,42 +53,6 @@ public class Execlass extends Application{
         launch(args);
     }
 
-    boolean thisFunction2BDeletedLater(Sector passedSector, Ship exeShip) {
-        boolean allSectorsUsed = false;
-        int unitSize = exeShip.getShipSize();
-        int heading = exeShip.getHeading();
-        int offset = (unitSize + 1) / 4;
-        int x = passedSector.getCoordinateX();
-        int y = passedSector.getCoordinateY();
-
-        for (Sector iteratedSector : process.getP1sectors()) {
-            int setupX = iteratedSector.getCoordinateX();
-            int setupY = iteratedSector.getCoordinateY();
-            int i = 0;
-            for (int n = 0; n < unitSize; n ++) {
-                switch (heading) {
-                    case 0:
-                        if ((setupX == x) && (setupY == (y - offset + n))) {
-                            int Y = y - offset + n;
-                            System.out.println("sector to be checked: x= " + x + "; y= " + Y);
-                            i ++;
-                        } break;
-                    case 270:
-                        if ((setupX == x - offset + n) && (setupY == y)) {
-                            int X = x - offset + n;
-                            System.out.println("sector to be checked: x= " + X + "; y= " + y);
-                            i ++;
-                        } break;
-                }
-                if (i == 4) {
-                    allSectorsUsed = true;
-                    System.out.println("i= " + i + "; unitsize = " + unitSize);
-                }
-            }
-        } return allSectorsUsed;
-    }
-
-
     void clearArea() {
         grid1.getChildren().clear();
     }
@@ -151,11 +115,16 @@ public class Execlass extends Application{
     // później tutaj można dać łapanie wyjątku "out of bounds" gdy wywołana lista nie jest jeszcze utworzona albo
     // wywołana pickUnit() w switchu nie działa z innych powodów
     void place(Sector sector, Ship exeShip) {
-        label1.setText("unit deployed");
-        hullSectors.clear();
         int x = sector.getCoordinateX();
         int y = sector.getCoordinateY();
         int unitSize = exeShip.getShipSize();
+        int offset = (unitSize + 1) / 4;
+        int heading = exeShip.getHeading();
+        if (((heading == 270) && (x - offset < 0 || y < 0)) || (heading == 0) && (x < 0 || (y - offset < 0))) {
+            return;
+        }
+        label1.setText("unit deployed");
+        hullSectors.clear();
 // blok wstawiania grafiki
         Image imageName = null;
         switch (unitSize) {
@@ -164,7 +133,6 @@ public class Execlass extends Application{
             case 2:  imageName = x2unit;  break;
             case 1:  imageName = x1unit;  break;
         }
-        int offset = (unitSize + 1) / 4;
         ImageView imageview = new ImageView(imageName);
         if (exeShip.getHeading() == 270) {
             imageview.getTransforms().add(rotate);
@@ -177,8 +145,8 @@ public class Execlass extends Application{
         }
 // blok modyfikacji sektorów
         process.placeUnit(x, y);
-        process.setupSectors(sector, exeShip);
-        process.alignHull(sector, exeShip);
+        process.setupProximity(sector, exeShip);
+        process.alignHull(sector, exeShip, true);
         if (process.fleet.size() < 1) changeState(); // gamestate zmienić gdzieś indziej
 // blok wyświetlania
         showPerimeter();
@@ -275,8 +243,9 @@ public class Execlass extends Application{
             grid1.add(paneArray[k], sector.getCoordinateX(), sector.getCoordinateY());
             int j = k;
             paneArray[k].setOnMouseEntered(e -> {
-                // System.out.print(sector.getCoordinateX() + "; " + sector.getCoordinateY() + "|| ");
                 if (process.getUnitInProcess() != null) {
+                    boolean a = process.alignHull(sector, process.getUnitInProcess(), false);
+                    System.out.println(a);
                     int size = process.getUnitInProcess().getShipSize();
                     int offset = (size + 1) / 4;
                     int element, dir;
@@ -293,11 +262,12 @@ public class Execlass extends Application{
                         Rectangle rectangle = new Rectangle(30, 30, Color.TRANSPARENT);
                         rectangle.setX(8);
                         rectangle.setY(8);
-                        rectangle.setStroke(Color.valueOf("#00ff00"));
+                        if (a) {
+                            rectangle.setStroke(Color.valueOf("#00ff00"));
+                        } else {
+                            rectangle.setStroke(Color.valueOf("#ff0000"));
+                        }
                         rectangle.setStrokeWidth(2);
-//                        if (valueX < 0 || valueY < 0) {
-//                            rectangle.setStroke(Color.valueOf("#ff0000"));
-//                        }
                         if ((j + h) >= 0 && (j + h) < 100) {
                             paneArray[j + h].getChildren().add(rectangle);
                         }
@@ -306,6 +276,7 @@ public class Execlass extends Application{
             });
             paneArray[k].setOnMouseExited(e -> {
                 if (process.getUnitInProcess() != null) {
+                    System.out.println("-------------");
                     for (int h : hullSectors) {
                         if ((j + h) >= 0 && (j + h) < 100) {
                             paneArray[j + h].getChildren().removeAll(paneArray[j + h].getChildren());
@@ -316,8 +287,6 @@ public class Execlass extends Application{
             paneArray[k].setOnMouseClicked(e -> {
                 if (process.getGamestate() == 1) {
                     if (process.getUnitInProcess() != null) {
-                        boolean a = thisFunction2BDeletedLater(sector, process.getUnitInProcess());
-                        System.out.println(a);
                         place(sector, process.getUnitInProcess());
                     } else {
                         label1.setText("pick the ship first");
