@@ -99,9 +99,7 @@ public class Process {
         int sectorUsage = 0;
         String st1 = "";
         String st2 = "";
-        for (Sector iteratedSector : getP1sectors()) {
-            st1 = passedSector.getStatus();
-            st2 = iteratedSector.getStatus();
+        for (Sector iteratedSector : p1sectors) {
             int setupX = iteratedSector.getCoordinateX();
             int setupY = iteratedSector.getCoordinateY();
             for (int n = 0; n < unitSize; n ++) {
@@ -121,17 +119,13 @@ public class Process {
                 if ((setupX == x + modifierX) && (setupY == y + modifierY)) {
                     int resultX = x + modifierX;
                     int resultY = y + modifierY;
-
-                    if (passedSector.getStatus().equals("proximity")) {
-                        System.out.println("proximity issue");
-                    }
                     if (deploying) {
                         iteratedSector.setStatus("hull");
                     } else {
                         Sector dummy = new Sector(0, resultX, resultY);
                         dummies.add(dummy);
                     }// task - zanim ten blok będzie znowu wykonany listę dummies trzeba rozładować.
-                    System.out.print("parsing: x= " + resultX + "; y= " + resultY + " ");
+                    //System.out.print("parsing: x= " + resultX + "; y= " + resultY + " ");
                     sectorUsage++;
                 }
                 if (sectorUsage == unitSize) {
@@ -139,12 +133,40 @@ public class Process {
                 }
             }
         }
-        System.out.println("\n " + st1 + " ; " + st2);
+        boolean free = true;
+        int proxCount = 0;
+        System.out.print("dummies: ");
+
+        for (Sector dummySector : dummies) {
+            System.out.print(" / x=" + dummySector.getCoordinateX() + "; y=" + dummySector.getCoordinateY());
+        }
+        System.out.println(" / end of dummies");
+
+        for (Sector sectorChecked : p1sectors) {
+            if (sectorChecked.getStatus().equals("proximity")) {
+                proxCount ++;
+                int checkX = sectorChecked.getCoordinateX();
+                int checkY = sectorChecked.getCoordinateY();
+                for (Sector dummySector : dummies) {
+                    int dummyX = dummySector.getCoordinateX();
+                    int dummyY = dummySector.getCoordinateY();
+                    System.out.println(
+                            "checked x=" + checkX + "; y=" + checkY + " / dummy: x=" + dummyX + "; y=" + dummyY);
+                    if (checkX == dummyX && checkY == dummyY) {
+                        System.out.println("COLLISION");
+                        free = false;
+                    }
+                }
+            }
+        }
+
         if (deploying) {
             passedSector.setStatus("origin");
         }
-        System.out.println("sectors placed= " + sectorUsage + "; unitsize = " + unitSize);
-        return allSectorsUsed;
+        System.out.println("prox sectors count= " + proxCount + " // sectors placed= " + sectorUsage +
+           "; unitsize = " + unitSize + ";  dummy list length: " + dummies.size());
+        dummies.clear();
+        return free && allSectorsUsed;
     }
 
     void placeUnit(int locationX, int locationY) {
@@ -153,7 +175,7 @@ public class Process {
         unitInProcess.setLocationY(locationY);
         fleet.remove(unitInProcess);
         this.unitInProcess = null;
-        System.out.println("unit removed: " + type);
+        //System.out.println("unit removed: " + type);
     }
 
     int rotateUnit() {

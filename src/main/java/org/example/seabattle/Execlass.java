@@ -244,8 +244,9 @@ public class Execlass extends Application{
             int j = k;
             paneArray[k].setOnMouseEntered(e -> {
                 if (process.getUnitInProcess() != null) {
+                    System.out.println("--------- entering sector");
                     boolean a = process.alignHull(sector, process.getUnitInProcess(), false);
-                    System.out.println(a);
+                    System.out.println("sector restriction: " + a);
                     int size = process.getUnitInProcess().getShipSize();
                     int offset = (size + 1) / 4;
                     int element, dir;
@@ -276,7 +277,6 @@ public class Execlass extends Application{
             });
             paneArray[k].setOnMouseExited(e -> {
                 if (process.getUnitInProcess() != null) {
-                    System.out.println("-------------");
                     for (int h : hullSectors) {
                         if ((j + h) >= 0 && (j + h) < 100) {
                             paneArray[j + h].getChildren().removeAll(paneArray[j + h].getChildren());
