@@ -1,7 +1,7 @@
 package org.example.seabattle;
 
 public class Ship {
-    private String shipType;
+    private final String shipType;
     private int damage;
     private int heading = 0;
     private int shipSize;

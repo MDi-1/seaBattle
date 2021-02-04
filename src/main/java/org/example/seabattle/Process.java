@@ -1,17 +1,14 @@
 package org.example.seabattle;
 /*
-program posiada opcję gry na 2 graczy - dlatego nie będzie 2 osobnych funkcji na ruch gracza i ruch komputera, tylko ruch gracza oznaczony jako AI będzie uzupełniony o ruch AI.
-
 Do zrobienia później - jak starczy czasu zastosować "stream-y"
 */
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Random;
 
 public class Process {
-    // typ na razie nie wiadomo jaki
-    // 0 = placement; 1 = tura gracz1; 2 = tura gracz2
-    private int gamestate = 0;
+    private int gamestate = -1;
     private Ship unitInProcess;
     private boolean placementAllowed = true;
     private List<Sector> p1sectors = new LinkedList<>();
@@ -41,6 +38,7 @@ public class Process {
     }
 
     List<Ship> createUnits() {
+        fleet.clear();
         String[] types = {
              "carrier", "cruiser1", "cruiser2", "sub1", "sub2", "sub3", "heli1", "heli2", "heli3", "heli4" };
         for (String newUnit : types) {
@@ -52,7 +50,6 @@ public class Process {
         for (Ship pickedUnit : fleet) {
             if (fullType.substring(0, 3).equals(pickedUnit.getShipType().substring(0, 3))) {
                 this.unitInProcess = pickedUnit;
-                System.out.print(pickedUnit.getShipType() + "; ");
             }
         } System.out.println("gamestate= " + gamestate);
     }
@@ -94,8 +91,6 @@ public class Process {
     void alignHull(Sector passedSector, Ship exeShip, boolean deploying) {
         if (!deploying) {
             this.placementAllowed = true;
-        } else {
-            System.out.println("-function alignHull in deploying mode-");
         }
         int x = passedSector.getCoordinateX();
         int y = passedSector.getCoordinateY();
@@ -131,7 +126,6 @@ public class Process {
                         Sector dummy = new Sector(0, resultX, resultY);
                         dummies.add(dummy);
                     }
-                    //System.out.print("parsing: x= " + resultX + "; y= " + resultY + " ");
                     sectorUsage++;
                 }
                 if (sectorUsage == unitSize) {
@@ -139,15 +133,16 @@ public class Process {
                 }
             }
         } // blok detekcji kolizji
-        int proxCount = 0;
-        System.out.print("dummies: ");
-        for (Sector dummySector : dummies) {
-            System.out.print(" / x=" + dummySector.getCoordinateX() + "; y=" + dummySector.getCoordinateY());
-        }
-        System.out.println(" / end of dummies");
+//        int proxCount = 0;
+//        System.out.print("dummies: ");
+//        for (Sector dummySector : dummies) {
+//            System.out.print(" / x=" + dummySector.getCoordinateX() + "; y=" + dummySector.getCoordinateY());
+//        }
+//        System.out.println(" / end of dummies");
         for (Sector sectorChecked : p1sectors) {
-            if (sectorChecked.getStatus().equals("proximity")) {
-                proxCount ++;
+            String st = sectorChecked.getStatus();
+            if (st.equals("proximity") || st.equals("hull") || st.equals("origin")) {
+//                proxCount ++;
                 int checkX = sectorChecked.getCoordinateX();
                 int checkY = sectorChecked.getCoordinateY();
                 for (Sector dummySector : dummies) {
@@ -156,7 +151,7 @@ public class Process {
 //                    System.out.println(
 //                            "checked x=" + checkX + "; y=" + checkY + " / dummy: x=" + dummyX + "; y=" + dummyY);
                     if (checkX == dummyX && checkY == dummyY) {
-                        System.out.println("COLLISION");
+//                        System.out.println("COLLISION");
                         free = false;
                     }
                 }
@@ -166,15 +161,11 @@ public class Process {
         if (deploying) {
             passedSector.setStatus("origin");
         }
-        System.out.println("prox sectors count= " + proxCount + " // sectors placed= " + sectorUsage +
-           "; unitsize = " + unitSize + ";  dummy list length: " + dummies.size());
+//        System.out.println("prox sectors count= " + proxCount + " // sectors placed= " + sectorUsage +
+//           "; unitsize = " + unitSize + ";  dummy list length: " + dummies.size());
         dummies.clear();
-        System.out.println("var states: free=" + free + "; allSectorsUsed=" + allSectorsUsed);
-        if (free && allSectorsUsed) {
-            this.placementAllowed = true;
-        } else {
-            this.placementAllowed = false;
-        }
+//        System.out.println("var states: free=" + free + "; allSectorsUsed=" + allSectorsUsed);
+        this.placementAllowed = free && allSectorsUsed;
     }
 
     void placeUnit(int locationX, int locationY) {
@@ -188,12 +179,16 @@ public class Process {
         }
         fleet.remove(unitInProcess);
         this.unitInProcess = null;
+
+        System.out.print("fleet to be placed: ");
+        for (Ship ship : fleet) System.out.print(ship.getShipType() + "; ");
+        System.out.println();
     }
 
     int rotateUnit() {
         int direction = 45;
-        if (getUnitInProcess() != null ) {
-            direction = getUnitInProcess().getHeading();
+        if (unitInProcess != null ) {
+            direction = unitInProcess.getHeading();
         } else {
             return direction;
         }
@@ -202,9 +197,53 @@ public class Process {
         } else {
             direction = 0;
         }
-        getUnitInProcess().setHeading(direction);
+        unitInProcess.setHeading(direction);
         return direction;
     }
+
+    void autoDeploySingleUnit() {
+        // tu okazuje się że fleet zamiast być listą powinna być kolejką FIFO
+        Ship ship = fleet.get(0);
+        Random random = new Random();
+        int x = random.nextInt(10);
+        int y = random.nextInt(10);
+        boolean h = random.nextBoolean();
+        int heading;
+        if (h) {
+            heading = 0;
+        } else {
+            heading = 270;
+        }
+        for (Sector sector : p1sectors) {
+            if (sector.getCoordinateX() == x && sector.getCoordinateY() == y) {
+                alignHull(sector, ship, false);
+
+                if (placementAllowed) {
+                    p1fleet.add(ship);
+                    ship.setLocationX(x);
+                    ship.setLocationY(y);
+                    ship.setHeading(heading);
+                    fleet.remove(ship);
+                    setupProximity(sector, ship);
+                    alignHull(sector, ship, true);
+                } else {
+                    System.out.println(
+                            ">>>> break is invoked for x= " + x + "; y= " + y);
+                    break;
+                }
+            }
+        }
+    }
+
+    void autoDeployAll() {
+        for (int i = 0; i < 9999; i ++) {
+            autoDeploySingleUnit();
+            if (fleet.size() < 1) {
+                return;
+            }
+        }
+    }
+
 
     //funkcja salwy - być może do kasacji bo jest w Execlass
     int fire(Sector sector, int gamestate) {
@@ -256,8 +295,8 @@ public class Process {
         return p2fleet;
     }
 
-    public void setPlacementAllowed(boolean placementAllowed) {
-        this.placementAllowed = placementAllowed;
+    public void setPlacementAllowed(boolean allowed) {
+        this.placementAllowed = allowed;
     }
 
     public void setGamestate(int gamestate) {

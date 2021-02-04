@@ -31,6 +31,6 @@ public class Sector {
 
     @Override
     public String toString() {
-        return "coordinateX= " + coordinateX + " , coordinateY= " + coordinateY;
+        return "x= " + coordinateX + " , y= " + coordinateY;
     }
 }

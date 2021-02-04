@@ -46,7 +46,7 @@ public class Execlass extends Application{
     ImageView helicoptrIcon = new ImageView(x1unit);
     Rotate rotate = new Rotate();
     List<Integer> hullSectors = new ArrayList<>();
-    private final Process process = new Process();
+    private Process process = new Process();
 
     public static void main(String[] args) {
         launch(args);
@@ -54,43 +54,49 @@ public class Execlass extends Application{
 
     void clearArea() {
         grid1.getChildren().clear();
+        sidePane1.getChildren().clear();
+        sidePane2.getChildren().clear();
+        sidePane3.getChildren().clear();
+        sidePane4.getChildren().clear();
+        grid3.getChildren().clear();
     }
 
-    void changeState() {
-        int i = process.getGamestate() + 1;
-        process.setGamestate(i);
-        if (process.getGamestate() == 2) {
-            grid2.add(p2beginBtn, 2, 4, 7, 1);
-        }
-        // TASK - sektory mają być klikalne
+    void clearGrid3() {
+        sidePane1.getChildren().clear();
+        sidePane2.getChildren().clear();
+        sidePane3.getChildren().clear();
+        sidePane4.getChildren().clear();
+        grid3.getChildren().clear();
+    }
+
+    void resetGrid3() {
+        grid3.add(rotateBtn, 1, 8, 3, 1);
     }
 
     void buttonActions() {
-        switch (process.getGamestate()) {
+        int i = process.getGamestate() + 1;
+        process.setGamestate(i);
+        int state = process.getGamestate();
+        System.out.println("gamestate set to >> " + state);
+        switch (state) {
             case 0:
-                grid3.getChildren().remove(starterBtn);
                 grid1.add(p1beginBtn, 2, 4, 7, 1);
-                process.setGamestate(1);                  // to powinno być w klasie Process
+                grid3.getChildren().remove(starterBtn);
                 break;
             case 1:
-                process.createUnits();                    // to powinno być w klasie Process
-                grid1.getChildren().remove(p1beginBtn);
                 grid3.add(rotateBtn, 1, 8, 3, 1);
                 prepareFleet();
+                process.createUnits();
+                grid1.getChildren().remove(p1beginBtn);
                 break;
+            case 2:
+                grid2.add(p2beginBtn, 2, 4, 7, 1);
             case 3:
-                process.setGamestate(3);                  // to powinno być w klasie Process
                 process.createUnits();                    // to powinno być w klasie Process
-                grid2.getChildren().remove(p2beginBtn);
+                //grid2.getChildren().remove(p2beginBtn);
                 prepareFleet();
             default:                                      // coś tu trzeba wpisać
         }
-    }
-
-    void rotateShip() {
-        hullSectors.clear();
-        int dir = process.rotateUnit();
-        label2.setText("unit's heading: " + dir);
     }
 
     void prepareFleet() {
@@ -147,7 +153,9 @@ public class Execlass extends Application{
         process.placeUnit(x, y);
         process.setupProximity(sector, exeShip);
         process.alignHull(sector, exeShip, true);
-        if (process.fleet.size() < 1) changeState(); // gamestate zmienić gdzieś indziej
+        if (process.fleet.size() < 1) {
+            buttonActions();
+        }
     }
 
     public void showArea() {
@@ -182,47 +190,6 @@ public class Execlass extends Application{
         showArea();
     }
 
-
-    /*
-    void placeOld(Sector sector, Ship exeShip) {
-        int x = sector.getCoordinateX();
-        int y = sector.getCoordinateY();
-        int unitSize = exeShip.getShipSize();
-        int offset = (unitSize + 1) / 4;
-        int heading = exeShip.getHeading();
-        if (((heading == 270) && (x - offset < 0 || y < 0)) || (heading == 0) && (x < 0 || (y - offset < 0))) {
-            return; // zapobieganie NPE
-        }
-        hullSectors.clear();
-// blok wstawiania grafiki
-        Image imageName = null;
-        switch (unitSize) {
-            case 4:  imageName = x4unit;  break;
-            case 3:  imageName = x3unit;  break;
-            case 2:  imageName = x2unit;  break;
-            case 1:  imageName = x1unit;  break;
-        }
-        ImageView imageview = new ImageView(imageName);
-        if (exeShip.getHeading() == 270) {
-            imageview.getTransforms().add(rotate);
-            grid1.add(imageview, x - offset, y, 1, unitSize);
-        } else {
-            grid1.add(imageview, x, y - offset, 1, unitSize);
-        }
-        if (setupComplete) {
-            return;
-        }
-// blok modyfikacji sektorów
-        label1.setText("unit deployed");
-        process.placeUnit(x, y);
-        process.setupProximity(sector, exeShip);
-        process.alignHull(sector, exeShip, true);
-        if (process.fleet.size() < 1) changeState(); // gamestate zmienić gdzieś indziej
-// blok wyświetlania
-        showArea();
-    }
-     */
-
     void fire(Sector sector) {
         // tu powinna być animacja strzału, ale nie będzie bo nie ma czasu.
         String status = sector.getStatus();
@@ -236,18 +203,6 @@ public class Execlass extends Application{
         BackgroundImage backgroundImage = new BackgroundImage(
                 field, BackgroundRepeat.REPEAT,BackgroundRepeat.NO_REPEAT, BackgroundPosition.CENTER, backgroundSize);
         Background background = new Background(backgroundImage);
-
-        Button extraButton = new Button("clear");
-        extraButton.setFont(new Font("Arial", 20));
-        grid2.add(extraButton, 4, 6, 4, 1);
-        extraButton.setOnAction(e -> clearArea());
-        Button extraButton1 = new Button("refresh");
-        extraButton1.setFont(new Font("Arial", 20));
-        grid2.add(extraButton1, 4, 8, 4, 1);
-        extraButton1.setOnAction(e -> {
-            process.setGamestate(7);
-            showArea();
-        });
 
         GridPane grid0 = new GridPane();
         grid0.setAlignment(Pos.TOP_LEFT);
@@ -296,9 +251,9 @@ public class Execlass extends Application{
             int j = index;
             paneArray[index].setOnMouseEntered(e -> {
                 if (process.getUnitInProcess() != null) {
-                    System.out.println("--------- entering sector");
+//                    System.out.println("--------- entering sector");
                     process.alignHull(sector, process.getUnitInProcess(), false);
-                    System.out.println("sector restriction: " + process.isPlacementAllowed());
+//                    System.out.println("sector restriction: " + process.isPlacementAllowed());
                     int size = process.getUnitInProcess().getShipSize();
                     int offset = (size + 1) / 4;
                     int element, dir;
@@ -353,8 +308,11 @@ public class Execlass extends Application{
             });
             index++;
         }
+
+        // czy da się napisać tak by lambda podała "e" do pick() ?
+
         /*
-        todo - UNCOMMENT THAT LATER
+        todo - odkomnetować to później
         for (Sector sector2p : process.getP2sectors()) {
             Pane sectorPane2 = new Pane();
             grid2.add(sectorPane2, sector2p.getCoordinateX(), sector2p.getCoordinateY());
@@ -374,20 +332,6 @@ public class Execlass extends Application{
         sidePane2.setOnMouseClicked(e -> pick("submarine"));
         sidePane1.setOnMouseClicked(e -> pick("helicopter"));
 
-        // blok tymczasowy - sprawdzanie jak działa "colspan, rowspan"
-        ImageView heliIco = new ImageView(x1unit);
-        ImageView subIco = new ImageView(x2unit);
-        grid1.add(heliIco, 0, 0);
-        grid1.add(subIco, 1, 1, 1, 2);
-        for (int i = 2; i < 4; i ++) {
-            ImageView subIc = new ImageView(x2unit);
-            grid1.add(subIc, i * 2, 2, 1, 2);
-            subIc.getTransforms().add(rotate);
-        }
-        // koniec bloku tymczasowego
-
-        // czy da się napisać tak by lambda podała "e" do pick() ?
-
         label1.setPadding(new Insets(0, 50, 0, 120));
         label1.setFont(new Font("Arial", 32));
         label1.setTextFill(Color.web("#FFF"));
@@ -400,13 +344,57 @@ public class Execlass extends Application{
         p1beginBtn.setFont(new Font("Arial", 20));
         p2beginBtn.setFont(new Font("Arial", 20));
         rotateBtn.setFont( new Font("Arial", 20));
-
         grid3.add(starterBtn, 0, 4, 4, 1);
 
         starterBtn.setOnAction(e -> buttonActions());
         p1beginBtn.setOnAction(e -> buttonActions());
-        p2beginBtn.setOnAction(e -> buttonActions());
-        rotateBtn.setOnAction(e ->  rotateShip());
+        p2beginBtn.setOnAction(e -> {
+            clearGrid3();
+            resetGrid3();
+            buttonActions();
+        });
+        rotateBtn.setOnAction(e -> {
+            hullSectors.clear();
+            int dir = process.rotateUnit();
+            label2.setText("unit's heading: " + dir);
+        });
+
+        Button extraButton = new Button("clear");
+        extraButton.setFont(new Font("Arial", 20));
+        grid2.add(extraButton, 0, 6, 4, 1);
+        extraButton.setOnAction(e -> clearArea());
+        Button extraButton1 = new Button("refresh");
+        extraButton1.setFont(new Font("Arial", 20));
+        grid2.add(extraButton1, 0, 8, 4, 1);
+        extraButton1.setOnAction(e -> {
+            process.setGamestate(7);
+            showArea();
+        });
+        Button autoButton = new Button("auto deploy");
+        autoButton.setFont(new Font("Arial", 20));
+        grid2.add(autoButton, 0, 0, 4, 1);
+        autoButton.setOnAction(e -> {
+            process.setGamestate(7);
+            process.autoDeployAll();
+            showArea();
+        });
+        Button resetButton = new Button("reset deployment");
+        resetButton.setFont(new Font("Arial", 20));
+        grid2.add(resetButton, 0, 2, 4, 1);
+        resetButton.setOnAction(e -> {
+            process = new Process();
+            clearArea();
+            showArea();
+        });
+        Button autoStepDeplBtn = new Button("auto deploy step by step");
+        autoStepDeplBtn.setFont(new Font("Arial", 20));
+        grid2.add(autoStepDeplBtn, 6, 0, 4, 1);
+        autoStepDeplBtn.setOnAction(e -> {
+            process.setGamestate(7);
+            process.autoDeploySingleUnit();
+            showArea();
+        });
+
         grid0.add(grid1, 0, 0);
         grid0.add(grid2, 1, 0);
         grid0.add(grid3, 2, 0);
@@ -420,4 +408,3 @@ public class Execlass extends Application{
     }
 }
 // task - na koniec pousuwać wszystkie niepotrzebne "System.out.print"
-// później spróbować zrealizować jakiś mechanizm wywołania funkcji jak w nt_inf.txt
