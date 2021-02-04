@@ -40,6 +40,8 @@ public class Process {
     List<Ship> createUnits() {
         fleet.clear();
         String[] types = {
+                // extra carriers for testing
+                "carrier1", "carrier2",
              "carrier", "cruiser1", "cruiser2", "sub1", "sub2", "sub3", "heli1", "heli2", "heli3", "heli4" };
         for (String newUnit : types) {
             Ship theUnit = new Ship(newUnit);
@@ -232,6 +234,7 @@ public class Process {
                     break;
                 }
             }
+            this.placementAllowed = false;
         }
     }
 
