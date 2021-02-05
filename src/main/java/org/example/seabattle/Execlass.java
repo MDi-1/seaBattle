@@ -390,6 +390,7 @@ public class Execlass extends Application{
         autoStepDeplBtn.setFont(new Font("Arial", 20));
         grid2.add(autoStepDeplBtn, 6, 0, 4, 1);
         autoStepDeplBtn.setOnAction(e -> {
+            System.out.println("---- auto deployment once ----");
             process.setGamestate(7);
             process.autoDeploySingleUnit();
             showArea();

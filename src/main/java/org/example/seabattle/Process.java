@@ -127,7 +127,7 @@ public class Process {
                     } else {
                         Sector dummy = new Sector(0, resultX, resultY);
                         dummies.add(dummy);
-                    }
+                    } // FIXME - DUMMY LIST IS CREATED REGARDLESS HEADING OF UNIT TO BE PLACED !!!
                     sectorUsage++;
                 }
                 if (sectorUsage == unitSize) {
@@ -135,25 +135,25 @@ public class Process {
                 }
             }
         } // blok detekcji kolizji
-//        int proxCount = 0;
-//        System.out.print("dummies: ");
-//        for (Sector dummySector : dummies) {
-//            System.out.print(" / x=" + dummySector.getCoordinateX() + "; y=" + dummySector.getCoordinateY());
-//        }
-//        System.out.println(" / end of dummies");
+        int proxCount = 0;
+        System.out.print("dummies: ");
+        for (Sector dummySector : dummies) {
+            System.out.print(" / x=" + dummySector.getCoordinateX() + "; y=" + dummySector.getCoordinateY());
+        }
+        System.out.println(" /. end of dummies");
+        System.out.print("checked sectors:");
         for (Sector sectorChecked : p1sectors) {
-            String st = sectorChecked.getStatus();
-            if (st.equals("proximity") || st.equals("hull") || st.equals("origin")) {
-//                proxCount ++;
+            String sc = sectorChecked.getStatus();
+            if (sc.equals("proximity") || sc.equals("hull") || sc.equals("origin")) {
+                proxCount ++;
                 int checkX = sectorChecked.getCoordinateX();
                 int checkY = sectorChecked.getCoordinateY();
                 for (Sector dummySector : dummies) {
                     int dummyX = dummySector.getCoordinateX();
                     int dummyY = dummySector.getCoordinateY();
-//                    System.out.println(
-//                            "checked x=" + checkX + "; y=" + checkY + " / dummy: x=" + dummyX + "; y=" + dummyY);
+                    System.out.print("/  x=" + checkX + "; y=" + checkY + " ");
                     if (checkX == dummyX && checkY == dummyY) {
-//                        System.out.println("COLLISION");
+                        System.out.println(" >>> COLLISION <<<");
                         free = false;
                     }
                 }
@@ -163,10 +163,10 @@ public class Process {
         if (deploying) {
             passedSector.setStatus("origin");
         }
-//        System.out.println("prox sectors count= " + proxCount + " // sectors placed= " + sectorUsage +
-//           "; unitsize = " + unitSize + ";  dummy list length: " + dummies.size());
+        System.out.println("\nprox count= " + proxCount + " // sectors placed= " + sectorUsage +
+           "; size = " + unitSize + ";  dummies: " + dummies.size());
         dummies.clear();
-//        System.out.println("var states: free=" + free + "; allSectorsUsed=" + allSectorsUsed);
+        System.out.println("bin states: free?=" + free + "; all used?=" + allSectorsUsed);
         this.placementAllowed = free && allSectorsUsed;
     }
 
@@ -216,26 +216,25 @@ public class Process {
         } else {
             heading = 270;
         }
+        Sector aSector = null;
         for (Sector sector : p1sectors) {
             if (sector.getCoordinateX() == x && sector.getCoordinateY() == y) {
-                alignHull(sector, ship, false);
-
-                if (placementAllowed) {
-                    p1fleet.add(ship);
-                    ship.setLocationX(x);
-                    ship.setLocationY(y);
-                    ship.setHeading(heading);
-                    fleet.remove(ship);
-                    setupProximity(sector, ship);
-                    alignHull(sector, ship, true);
-                } else {
-                    System.out.println(
-                            ">>>> break is invoked for x= " + x + "; y= " + y);
-                    break;
-                }
+                aSector = sector;
             }
-            this.placementAllowed = false;
         }
+        alignHull(aSector, ship, false);
+        if (placementAllowed) {
+            p1fleet.add(ship);
+            ship.setLocationX(x);
+            ship.setLocationY(y);
+            ship.setHeading(heading);
+            fleet.remove(ship);
+            setupProximity(aSector, ship);
+            alignHull(aSector, ship, true);
+        } else {
+            System.out.println(">>>> break is invoked for x= " + x + "; y= " + y);
+        }
+    this.placementAllowed = false;
     }
 
     void autoDeployAll() {

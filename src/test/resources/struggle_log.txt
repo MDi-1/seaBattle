@@ -1,0 +1,5 @@
+seaBattle
+
+31-01-2021, 20:20 - działająca wersja na 1 sektor
+01-02-2021, 13:00 - działają dynamiczne kwadraty, zabieramy się za rozbicie place()
+05-02-2021, 14:20 - chyba znalazłem błąd. Objaw -
