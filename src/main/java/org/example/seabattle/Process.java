@@ -91,8 +91,11 @@ public class Process {
     }
 
     void alignHull(Sector passedSector, Ship exeShip, boolean deploying) {
-        if (!deploying) {
+        if (deploying) {
             this.placementAllowed = true;
+            System.out.print("f() deployment mode");
+        } else {
+            System.out.print("f() placement mode");
         }
         int x = passedSector.getCoordinateX();
         int y = passedSector.getCoordinateY();
@@ -102,12 +105,13 @@ public class Process {
         boolean allSectorsUsed = false;
         boolean free = true;
         int sectorUsage = 0;
+        System.out.println("modifiers:");
         for (Sector iteratedSector : p1sectors) {
             int setupX = iteratedSector.getCoordinateX();
             int setupY = iteratedSector.getCoordinateY();
+            int modifierX = 0;
+            int modifierY = 0;
             for (int n = 0; n < unitSize; n ++) {
-                int modifierX = 0;
-                int modifierY = 0;
                 switch (heading) {
                     case 0:
                         modifierX = 0;
@@ -122,6 +126,7 @@ public class Process {
                 if ((setupX == x + modifierX) && (setupY == y + modifierY)) {
                     int resultX = x + modifierX;
                     int resultY = y + modifierY;
+                    System.out.print(" X= " + modifierX + "; Y= " + modifierY + " / ");
                     if (deploying) {
                         iteratedSector.setStatus("hull");
                     } else {
@@ -136,7 +141,7 @@ public class Process {
             }
         } // blok detekcji kolizji
         int proxCount = 0;
-        System.out.print("dummies: ");
+        System.out.print("\ndummies: ");
         for (Sector dummySector : dummies) {
             System.out.print(" / x=" + dummySector.getCoordinateX() + "; y=" + dummySector.getCoordinateY());
         }
