@@ -16,6 +16,7 @@ import javafx.scene.text.TextAlignment;
 import javafx.scene.transform.Rotate;
 import javafx.stage.Stage;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 public class Execlass extends Application{
@@ -32,45 +33,27 @@ public class Execlass extends Application{
     private GridPane grid1 = new GridPane();
     private GridPane grid2 = new GridPane();
     private GridPane grid3 = new GridPane();
-    private Pane sidePane1 = new Pane();
-    private Pane sidePane2 = new Pane();
-    private Pane sidePane3 = new Pane();
-    private Pane sidePane4 = new Pane();
-    Button starterBtn = new Button("START GAME");
-    Button p1beginBtn = new Button("PLAYER 1  DEPLOY UNITS");
-    Button p2beginBtn = new Button("P 1 DEPLOYMENT FINISHED");
-    Button rotateBtn  = new Button("ROTATE");
-    ImageView carrierIcon = new ImageView(x4unit);
-    ImageView cruiserIcon = new ImageView(x3unit);
-    ImageView submarineIcon = new ImageView(x2unit);
-    ImageView helicoptrIcon = new ImageView(x1unit);
-    Rotate rotate = new Rotate();
-    List<Integer> hullSectors = new ArrayList<>();
+    private Button starterBtn = new Button("START GAME");
+    private Button p1beginBtn = new Button("PLAYER 1  DEPLOY UNITS");
+    private Button p2beginBtn = new Button("PLAYER 1 DEPLOYMENT FINISHED");
+    private Button activateAiBtn = new Button("PLAY AGAINST COMPUTER");
+    private Button enterButton = new Button("ENTER THE BATTLE");
+    private Button rotateBtn  = new Button("ROTATE");
+    private Rotate rotate = new Rotate();
+    private List<Integer> hullSectors = new ArrayList<>();
+    private Pane[] sidePaneArray = new Pane[4];
+    private Label[] unitCounter = new Label[4];
+    private int player2prepare = 1;
+    private boolean visualCheck = false;
     private Process process = new Process();
-
-    public static void main(String[] args) {
-        launch(args);
-    }
 
     void clearArea() {
         grid1.getChildren().clear();
-        sidePane1.getChildren().clear();
-        sidePane2.getChildren().clear();
-        sidePane3.getChildren().clear();
-        sidePane4.getChildren().clear();
+//        sidePane1.getChildren().clear();
+//        sidePane2.getChildren().clear();
+//        sidePane3.getChildren().clear();
+//        sidePane4.getChildren().clear();
         grid3.getChildren().clear();
-    }
-
-    void clearGrid3() {
-        sidePane1.getChildren().clear();
-        sidePane2.getChildren().clear();
-        sidePane3.getChildren().clear();
-        sidePane4.getChildren().clear();
-        grid3.getChildren().clear();
-    }
-
-    void resetGrid3() {
-        grid3.add(rotateBtn, 1, 8, 3, 1);
     }
 
     void buttonActions() {
@@ -85,29 +68,83 @@ public class Execlass extends Application{
                 break;
             case 1:
                 grid3.add(rotateBtn, 1, 8, 3, 1);
-                prepareFleet();
-                process.createUnits();
+                grid2.add(p2beginBtn, 1, 4, 8, 1);
                 grid1.getChildren().remove(p1beginBtn);
+                prepareFleet();
+                player2prepare = 1;
                 break;
             case 2:
-                grid2.add(p2beginBtn, 2, 4, 7, 1);
-            case 3:
-                process.createUnits();                    // to powinno być w klasie Process
-                //grid2.getChildren().remove(p2beginBtn);
                 prepareFleet();
-            default:                                      // coś tu trzeba wpisać
+                grid3.add(rotateBtn, 1, 8, 3, 1);
+                grid2.getChildren().removeAll();
+                break;
+            case 3:
+
         }
     }
 
     void prepareFleet() {
-        sidePane4.getChildren().add(carrierIcon);
-        sidePane3.getChildren().add(cruiserIcon);
-        sidePane2.getChildren().add(submarineIcon);
-        sidePane1.getChildren().add(helicoptrIcon);
-        grid3.add(sidePane4, 0, 0);
-        grid3.add(sidePane3, 0, 2);
-        grid3.add(sidePane2, 0, 4);
-        grid3.add(sidePane1, 0, 6);
+        process.createUnits();
+        for (int idx = 4; idx > 0; idx--) {
+            Image imgName = null;
+            String shipName = "nothing";
+            switch (idx) {
+                case 4:
+                    imgName = x4unit;
+                    shipName = "carrier";
+                    break;
+                case 3:
+                    imgName = x3unit;
+                    shipName = "cruiser";
+                    break;
+                case 2:
+                    imgName = x2unit;
+                    shipName = "submarine";
+                    break;
+                case 1:
+                    imgName = x1unit;
+                    shipName = "helicopter";
+            }
+            ImageView view = new ImageView(imgName);
+            view.getTransforms().add(rotate);
+            String finalShipName = shipName;
+            sidePaneArray[idx -1] = new Pane();
+            sidePaneArray[idx -1].getChildren().add(view);
+            grid3.add(sidePaneArray[idx -1], 0, (2 * idx) - 2);
+            sidePaneArray[idx -1].setOnMouseClicked(e -> pick(finalShipName));
+            unitCounter[idx -1] = new Label("x?");
+            unitCounter[idx -1].setFont(new Font("Arial", 20));
+            unitCounter[idx -1].setTextFill(Color.web("#FFF"));
+            unitCounter[idx -1].setTextAlignment(TextAlignment.RIGHT);
+            grid3.add(unitCounter[idx -1], 4, (2 * idx) - 2);
+        }
+        updateUnitCounter();
+    }
+
+    void updateUnitCounter() {
+        int helQuantity = 0;
+        int subQuantity = 0;
+        int cruQuantity = 0;
+        int carQuantity = 0;
+        for (Ship ship : process.fleet) {
+            switch (ship.getShipSize()) {
+                case 1:
+                    helQuantity ++;
+                    break;
+                case 2:
+                    subQuantity ++;
+                    break;
+                case 3:
+                    cruQuantity ++;
+                    break;
+                case 4:
+                    carQuantity ++;
+            }
+        }
+        unitCounter[0].setText("  x" + helQuantity);
+        unitCounter[1].setText("  x" + subQuantity);
+        unitCounter[2].setText("  x" + cruQuantity);
+        unitCounter[3].setText("  x" + carQuantity);
     }
 
     void pick(String fullType) {
@@ -119,7 +156,7 @@ public class Execlass extends Application{
     }
 
     // później tutaj można dać łapanie wyjątku "out of bounds" gdy wywołana lista nie jest jeszcze utworzona albo
-    // wywołana pickUnit() w switchu nie działa z innych powodów
+    // wywołana pickUnit() w switch-u nie działa z innych powodów
     void placeShipImg(Sector sector, Ship exeShip) {
         int x = sector.getCoordinateX();
         int y = sector.getCoordinateY();
@@ -153,19 +190,16 @@ public class Execlass extends Application{
         process.placeUnit(x, y);
         process.setupProximity(sector, exeShip);
         process.alignHull(sector, exeShip, true);
-        if (process.fleet.size() < 1) {
-            buttonActions();
-        }
     }
 
-    public void showArea() {
-        for (Sector readSector : process.getP1sectors()) {
+    public void showArea(List<Sector> processedSectors) {
+        for (Sector readSector : processedSectors) {
             String status = readSector.getStatus();
             int x = readSector.getCoordinateX();
             int y = readSector.getCoordinateY();
 
             if (status != null) {
-                if (status.equals("proximity")) {
+                if (process.getGamestate() < 3 && status.equals("proximity")) {
                     ImageView prox = new ImageView(proximity);
                     grid1.add(prox, x, y);
                 }
@@ -173,7 +207,7 @@ public class Execlass extends Application{
                     ImageView hull = new ImageView(inTarget);
                     grid1.add(hull, x, y);
                 }
-                if (process.getGamestate() == 7 && status.equals("origin")) {
+                if (visualCheck && status.equals("origin")) {
                     for (Ship revealedShip : process.getP1fleet()) {
                         if (x == revealedShip.getLocationX() && y == revealedShip.getLocationY()) {
                             placeShipImg(readSector, revealedShip);
@@ -187,7 +221,12 @@ public class Execlass extends Application{
     void place(Sector placementSector, Ship placedShip) {
         placeShipImg(placementSector, placedShip);
         placeAttributes(placementSector, placedShip);
-        showArea();
+        showArea(process.getP1sectors());
+        updateUnitCounter();
+    }
+
+    void player2preparation() {
+        player2prepare = player2prepare + 1;
     }
 
     void fire(Sector sector) {
@@ -218,10 +257,6 @@ public class Execlass extends Application{
         rotate.setPivotX(23);
         rotate.setPivotY(23);
         rotate.setAngle(270);
-        carrierIcon.getTransforms().add(rotate);
-        cruiserIcon.getTransforms().add(rotate);
-        submarineIcon.getTransforms().add(rotate);
-        helicoptrIcon.getTransforms().add(rotate);
 
         // setting up the grid shapes
         ColumnConstraints cConstr = new ColumnConstraints(46);
@@ -308,6 +343,7 @@ public class Execlass extends Application{
             });
             index++;
         }
+        // FIXME - podczas ustawiania jednostek zostają zielone kwadraty, a nie powinny.
 
         // czy da się napisać tak by lambda podała "e" do pick() ?
 
@@ -327,11 +363,6 @@ public class Execlass extends Application{
         }
          */
 
-        sidePane4.setOnMouseClicked(e -> pick("carrier"));
-        sidePane3.setOnMouseClicked(e -> pick("cruiser"));
-        sidePane2.setOnMouseClicked(e -> pick("submarine"));
-        sidePane1.setOnMouseClicked(e -> pick("helicopter"));
-
         label1.setPadding(new Insets(0, 50, 0, 120));
         label1.setFont(new Font("Arial", 32));
         label1.setTextFill(Color.web("#FFF"));
@@ -340,6 +371,7 @@ public class Execlass extends Application{
         label2.setFont(new Font("Arial", 32));
         label2.setTextFill(Color.web("#FFF"));
         label2.setTextAlignment(TextAlignment.JUSTIFY);
+        activateAiBtn.setFont(new Font("Arial", 20));
         starterBtn.setFont(new Font("Arial", 20));
         p1beginBtn.setFont(new Font("Arial", 20));
         p2beginBtn.setFont(new Font("Arial", 20));
@@ -349,34 +381,58 @@ public class Execlass extends Application{
         starterBtn.setOnAction(e -> buttonActions());
         p1beginBtn.setOnAction(e -> buttonActions());
         p2beginBtn.setOnAction(e -> {
-            clearGrid3();
-            resetGrid3();
+            grid1.getChildren().clear();
+            grid3.getChildren().clear();
+            p2beginBtn.setText("PLAYER 2  DEPLOY UNITS");
+            if (player2prepare == 2) {
+                buttonActions();
+            } else {
+                player2preparation();
+                grid2.add(activateAiBtn, 1, 6, 7, 1);
+            }
+        });
+        activateAiBtn.setOnAction(e -> {
             buttonActions();
+            grid3.getChildren().clear();
+            player2preparation();
+            grid1.add(enterButton, 2, 6, 7, 1);
         });
         rotateBtn.setOnAction(e -> {
             hullSectors.clear();
             int dir = process.rotateUnit();
             label2.setText("unit's heading: " + dir);
         });
+        enterButton.setFont(new Font("Arial", 20));
+        enterButton.setOnAction(e -> {
+            visualCheck = true;
+            process.autoDeployAll();
+            showArea(process.getP1sectors());
+            updateUnitCounter();
+            visualCheck = false;
+            buttonActions();
+        });
 
-        Button extraButton = new Button("clear");
-        extraButton.setFont(new Font("Arial", 20));
-        grid2.add(extraButton, 0, 6, 4, 1);
-        extraButton.setOnAction(e -> clearArea());
+        Button clearButton = new Button("clear");
+        clearButton.setFont(new Font("Arial", 20));
+        grid2.add(clearButton, 4, 8, 4, 1);
+        clearButton.setOnAction(e -> clearArea());
         Button extraButton1 = new Button("refresh");
         extraButton1.setFont(new Font("Arial", 20));
         grid2.add(extraButton1, 0, 8, 4, 1);
         extraButton1.setOnAction(e -> {
-            process.setGamestate(7);
-            showArea();
+//            process.setGamestate(7);
+            showArea(process.getP1sectors());
         });
         Button autoButton = new Button("auto deploy");
         autoButton.setFont(new Font("Arial", 20));
         grid2.add(autoButton, 0, 0, 4, 1);
         autoButton.setOnAction(e -> {
-            process.setGamestate(7);
+//            process.setGamestate(7);
+            visualCheck = true;
             process.autoDeployAll();
-            showArea();
+            showArea(process.getP1sectors());
+            updateUnitCounter();
+            visualCheck = false;
         });
         Button resetButton = new Button("reset deployment");
         resetButton.setFont(new Font("Arial", 20));
@@ -384,16 +440,18 @@ public class Execlass extends Application{
         resetButton.setOnAction(e -> {
             process = new Process();
             clearArea();
-            showArea();
+            showArea(process.getP1sectors());
+            updateUnitCounter();
         });
         Button autoStepDeplBtn = new Button("auto deploy step by step");
         autoStepDeplBtn.setFont(new Font("Arial", 20));
         grid2.add(autoStepDeplBtn, 6, 0, 4, 1);
         autoStepDeplBtn.setOnAction(e -> {
             System.out.println("---- auto deployment once ----");
-            process.setGamestate(7);
+//            process.setGamestate(7);
             process.autoDeploySingleUnit();
-            showArea();
+            showArea(process.getP1sectors());
+            updateUnitCounter();
         });
 
         grid0.add(grid1, 0, 0);
@@ -406,6 +464,9 @@ public class Execlass extends Application{
         primaryStage.setTitle("seaBattle");
         primaryStage.setScene(scene);
         primaryStage.show();
+    }
+    public static void main(String[] args) {
+        launch(args);
     }
 }
 // task - na koniec pousuwać wszystkie niepotrzebne "System.out.print"

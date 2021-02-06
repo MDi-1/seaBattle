@@ -1,5 +1,68 @@
 seaBattle
 
-31-01-2021, 20:20 - działająca wersja na 1 sektor
-01-02-2021, 13:00 - działają dynamiczne kwadraty, zabieramy się za rozbicie place()
-05-02-2021, 14:20 - chyba znalazłem błąd. Objaw -
+'31-01-2021, 20:20 - działająca wersja na 1 sektor
+'01-02-2021, 13:00 - działają dynamiczne kwadraty, zabieramy się za rozbicie place()
+'05-02-2021, 14:20 - chyba znalazłem błąd w auto deploy
+
+
+
+class Ship {
+
+    // heading 0
+    int[] heliArray = {0}
+    int[] sub_Array = {0, 1}
+    int[] cru_Array = {-1, 0, 1}
+    int[] carrArray = {-1, 0, 1, 2}
+
+    // heading 270
+    int[] heliArray = {0}
+    int[] sub_Array = {0, 10}
+    int[] cru_Array = {-10, 0, 10}
+    int[] carrArray = {-10, 0, 10, 20}
+
+}
+
+
+
+VARIABLE: String state:
+        SETUP
+    "origin"
+    "hull"
+    "proximity"
+    "clear"
+        GAME
+    "concealed_clear"
+    "concealed_hull"
+    "exposed_missed"
+    "exposed_shot"
+    "exposed_sunk" "(unit to be compromised)"
+
+VARIABLE: int gamestate:
+    -1= "startscreen"
+    0 = "after clicking start"
+    1 = "player1 deploying"
+    2 = "player1 ready"
+    3 = "player2 deploying"
+    4 = "player2 ready"
+    5 = "player1 turn"
+    6 = "player2 turn"
+    7 = "proclaim winner, reveal all"
+
+
+'Dodatkowa funkcjonalność
+----
+'Klik na postawionej jednostce odzyskuje ją
+'Możliwość grania w 2 osoby (hot seat)
+'Poziom trudności komputera
+
+
+BUTTONS:
+    on grid1                on grid2                on grid3
+                                                    B0'START'
+    B1'P1 DEPLOY'
+                        B2'P1 DEPLOYMENT DONE'
+                            B2'P2 DEPLOY'
+B1'P2 DEPLOYMENT DONE'                              B4'ROTATE'
+                        B3'PLAY AGAINST COMP'
+                        B3'ENTER THE BATTLE'
+                                                    B0'END GAME'
