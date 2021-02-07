@@ -13,6 +13,10 @@ public class Sector {
         this.coordinateY = coordinateY;
     }
 
+    public int getPlayer() {
+        return player;
+    }
+
     public String getStatus() {
         return status;
     }
@@ -31,6 +35,6 @@ public class Sector {
 
     @Override
     public String toString() {
-        return "x= " + coordinateX + " , y= " + coordinateY;
+        return "pl= " + player + "x= " + coordinateX + " , y= " + coordinateY + ", st= " + status;
     }
 }

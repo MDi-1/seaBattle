@@ -11,8 +11,8 @@ public class Process {
     private int gamestate = -1;
     private Ship unitInProcess;
     private boolean placementAllowed = true;
-    private List<Sector> p1sectors = new LinkedList<>();
-    private List<Sector> p2sectors = new LinkedList<>();
+    private final List<Sector> p1sectors = new LinkedList<>();
+    private final List<Sector> p2sectors = new LinkedList<>();
     private List<Sector> dummies = new ArrayList<>();
     List<Ship> fleet = new LinkedList<>();
     List<Ship> p1fleet = new ArrayList<>();
@@ -45,10 +45,16 @@ public class Process {
     }
 
     public void setupProximity(Sector sector, Ship exeShip) {
+        List<Sector> sectorList = null;
+        if (sector.getPlayer() == 1) {
+            sectorList = p1sectors;
+        }
+        if (sector.getPlayer() == 2) {
+            sectorList = p2sectors;
+        }
         int unitSize = exeShip.getShipSize();
         int heading = exeShip.getHeading();
         int offset = (unitSize + 1) / 4;
-
         int outboundW, outboundE, outboundN, outboundS;
         outboundW = outboundE = outboundN = outboundS = 0;
         if (heading == 0) {
@@ -61,7 +67,6 @@ public class Process {
         }
         int x = sector.getCoordinateX();
         int y = sector.getCoordinateY();
-        List<Sector> sectorList = getP1sectors();
 
         for (Sector modifiedSector : sectorList) {
             int setupX = modifiedSector.getCoordinateX();
@@ -78,7 +83,7 @@ public class Process {
         }
     }
 
-    void alignHull(Sector passedSector, Ship exeShip, boolean deploying) {
+    void alignHull(List<Sector> playerField, Sector passedSector, Ship exeShip, boolean deploying) {
         if (deploying) {
             this.placementAllowed = true;
 //            System.out.println(" ]]] f.in deployment mode. [[[");
@@ -94,7 +99,7 @@ public class Process {
         boolean free = true;
         int sectorUsage = 0;
 //        System.out.print("modifiers:");
-        for (Sector iteratedSector : p1sectors) {
+        for (Sector iteratedSector : playerField) {
             int setupX = iteratedSector.getCoordinateX();
             int setupY = iteratedSector.getCoordinateY();
             int modifierX = 0;
@@ -135,7 +140,7 @@ public class Process {
 //        }
 //        System.out.println(" >>. end of dummies");
 //        System.out.print("checked sectors:");
-        for (Sector sectorChecked : p1sectors) {
+        for (Sector sectorChecked : playerField) {
             String sc = sectorChecked.getStatus();
             if (sc.equals("proximity") || sc.equals("hull") || sc.equals("origin")) {
                 proxCount ++;
@@ -152,7 +157,6 @@ public class Process {
                 }
             }
         }
-
         if (deploying) {
             passedSector.setStatus("origin");
         }
@@ -212,37 +216,35 @@ public class Process {
         ship.setLocationX(x);
         ship.setLocationY(y);
         ship.setHeading(heading);
-        Sector aSector = null;
-        List<Sector> sectorList = null;
-        List<Ship> shipList = null;
         if (gamestate == 1) {
+            Sector aSector = null;
             for (Sector sector : p1sectors) {
                 if (sector.getCoordinateX() == x && sector.getCoordinateY() == y) {
                     aSector = sector;
                 }
             }
+            alignHull(p1sectors, aSector, ship, false);
+            if (placementAllowed) {
+                p1fleet.add(ship);
+                fleet.remove(ship);
+                setupProximity(aSector, ship);
+                alignHull(p1sectors, aSector, ship, true);
+            }
         }
         if (gamestate == 2) {
+            Sector aSector = null;
             for (Sector sector : p2sectors) {
                 if (sector.getCoordinateX() == x && sector.getCoordinateY() == y) {
                     aSector = sector;
                 }
             }
-        }
-
-        alignHull(aSector, ship, false);
-        if (placementAllowed) {
-            if (gamestate == 1) {
-                p1fleet.add(ship);
-            }
-            if (gamestate == 2) {
+            alignHull(p2sectors, aSector, ship, false);
+            if (placementAllowed) {
                 p2fleet.add(ship);
+                fleet.remove(ship);
+                setupProximity(aSector, ship);
+                alignHull(p2sectors, aSector, ship, true);
             }
-            fleet.remove(ship);
-            setupProximity(aSector, ship);
-            alignHull(aSector, ship, true);
-        } else {
-//            System.out.println(">>>> break is invoked for x= " + x + "; y= " + y);
         }
     this.placementAllowed = false;
     }
@@ -313,5 +315,14 @@ public class Process {
 
     public void setGamestate(int gamestate) {
         this.gamestate = gamestate;
+    }
+
+    // funkcja do testów
+    void listSectors() {
+        for (int i = 0; i < 100; i ++) {
+            String s1 = p1sectors.get(i).toString();
+            String s2 = p2sectors.get(i).toString();
+            System.out.println(s1 + "|||" + s2);
+        }
     }
 }
