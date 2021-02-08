@@ -5,6 +5,10 @@ seaBattle
 '05-02-2021, 14:20 - chyba znalazłem błąd w auto deploy
 
 
+Elementy specyfikacji:
+przycisk "PLAY AGAINST COMP." -> autoDeploy() dla gracza2,
+wyświetlenie przycisku "ENTER THE BATTLE",
+przeniesienie przycisku "refresh"
 
 class Ship {
 
@@ -33,9 +37,20 @@ VARIABLE: String state:
         GAME
     "concealed_clear"
     "concealed_hull"
-    "exposed_missed"
-    "exposed_shot"
-    "exposed_sunk" "(unit to be compromised)"
+    "concealed_origin"
+    "exposed_clear" "(shot)"
+    "exposed_hull" "(shot)"
+    "exposed_origin" "(shot)"
+
+    depreciated: "exposed_sunk" "???(unit to be compromised) - this status to be assigned in ship class"
+
+    p1 -> gs3 -> shoot grid 2
+    p2 -> gs4 -> shoot grid 1
+
+
+
+
+
 
 VARIABLE: int gamestate:
     -1= "startscreen"

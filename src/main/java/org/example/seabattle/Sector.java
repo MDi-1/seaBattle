@@ -35,6 +35,6 @@ public class Sector {
 
     @Override
     public String toString() {
-        return "pl= " + player + "x= " + coordinateX + " , y= " + coordinateY + ", st= " + status;
+        return "player= " + player + ", x= " + coordinateX + ", y= " + coordinateY + ", st= " + status;
     }
 }

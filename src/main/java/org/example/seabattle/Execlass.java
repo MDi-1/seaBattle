@@ -25,7 +25,7 @@ public class Execlass extends Application{
     private final Image x3unit = new Image("file:src/main/resources/unit3v2.png");
     private final Image x4unit = new Image("file:src/main/resources/unit4.png");
     private final Image splash = new Image("file:src/main/resources/splash.png");
-    private final Image inTarget = new Image("file:src/main/resources/cross.png");
+    private final Image targetHit = new Image("file:src/main/resources/cross.png");
     private final Image proximity = new Image("file:src/main/resources/proximity.png");
     private final Label label1 = new Label("label1 label1 label1");
     private final Label label2 = new Label("label2 label2 label2");
@@ -47,7 +47,7 @@ public class Execlass extends Application{
     Pane[] paneArrayP2 = new Pane[100];
     private Label[] unitCounter = new Label[4];
     private int player2prepare = 1;
-    private boolean visualCheck = false;
+    private boolean visualCheck = true;
     private Process process = new Process();
 
     void clearArea() {
@@ -78,9 +78,14 @@ public class Execlass extends Application{
                 prepareFleet();
                 grid3.add(rotateBtn, 1, 8, 3, 1);
                 grid2.getChildren().clear();
+                visualCheck = false;
                 break;
             case 3:
-
+                visualCheck = true;
+                grid1.getChildren().clear();
+                grid2.getChildren().clear();
+                process.rebuildSectors();
+                createShootablePanes();
         }
     }
 
@@ -112,7 +117,10 @@ public class Execlass extends Application{
             sidePaneArray[idx -1] = new Pane();
             sidePaneArray[idx -1].getChildren().add(view);
             grid3.add(sidePaneArray[idx -1], 0, (2 * idx) - 2);
-            sidePaneArray[idx -1].setOnMouseClicked(e -> pick(finalShipName));
+            sidePaneArray[idx -1].setOnMouseClicked(e -> {
+                pick(finalShipName);
+                hullSectors.clear();
+            });
             unitCounter[idx -1] = new Label("x?");
             unitCounter[idx -1].setFont(new Font("Arial", 20));
             unitCounter[idx -1].setTextFill(Color.web("#FFF"));
@@ -206,29 +214,40 @@ public class Execlass extends Application{
             int x = readSector.getCoordinateX();
             int y = readSector.getCoordinateY();
 
-            if (status != null) {
-                if (process.getGamestate() < 3 && status.equals("proximity")) {
+            switch (status) {
+                case "proximity":
                     ImageView prox = new ImageView(proximity);
                     grid.add(prox, x, y);
-                }
-                if (status.equals("hull")) {
-                    ImageView hull = new ImageView(inTarget);
-                    grid.add(hull, x, y);
-                }
-                if (visualCheck && status.equals("origin")) {
-                    List<Ship> exeFleet = null;
-                    if (player == 1) {
-                        exeFleet = process.getP1fleet();
-                    }
-                    if (player == 2) {
-                        exeFleet = process.getP2fleet();
-                    }
-                    for (Ship revealedShip : exeFleet) {
-                        if (x == revealedShip.getLocationX() && y == revealedShip.getLocationY()) {
-                            placeShipImg(readSector, revealedShip, grid);
+                    break;
+                case "exposed_clear":
+                    ImageView waterSplash = new ImageView(splash);
+                    grid.add(waterSplash, x, y);
+                    break;
+                case "exposed_hull":
+                    ImageView cross = new ImageView(targetHit);
+                    grid.add(cross, x, y);
+                    break;
+                case "origin":
+                case "exposed_origin":
+                case "concealed_origin": // te 3 ostatnie "case" zrobić tu porządek
+                    if (visualCheck) {
+                        List<Ship> exeFleet = null;
+                        if (player == 1) {
+                            exeFleet = process.getP1fleet();
                         }
+                        if (player == 2) {
+                            exeFleet = process.getP2fleet();
+                        }
+                        for (Ship revealedShip : exeFleet) {
+                            if (x == revealedShip.getLocationX() && y == revealedShip.getLocationY()) {
+                                placeShipImg(readSector, revealedShip, grid);
+                            }
+                        }
+                    } else {
+                        ImageView hit = new ImageView(targetHit);
+                        grid.add(hit, x, y);
                     }
-                }
+                default:
             }
         }
     }
@@ -253,12 +272,9 @@ public class Execlass extends Application{
     void createClickablePanes(Pane[]paneArray, Sector sector, int index, GridPane grid) {
         paneArray[index] = new Pane();
         grid.add(paneArray[index], sector.getCoordinateX(), sector.getCoordinateY());
-        int j = index;
         paneArray[index].setOnMouseEntered(e -> {
             if (process.getUnitInProcess() != null) {
-//                    System.out.println("--------- entering sector");
                 process.alignHull(process.getP1sectors(), sector, process.getUnitInProcess(), false);
-//                    System.out.println("sector restriction: " + process.isPlacementAllowed());
                 int size = process.getUnitInProcess().getShipSize();
                 int offset = (size + 1) / 4;
                 int element, dir;
@@ -281,8 +297,8 @@ public class Execlass extends Application{
                         rectangle.setStroke(Color.valueOf("#ff0000"));
                     }
                     rectangle.setStrokeWidth(2);
-                    if ((j + h) >= 0 && (j + h) < 100) {
-                        paneArray[j + h].getChildren().add(rectangle);
+                    if ((index + h) >= 0 && (index + h) < 100) {
+                        paneArray[index + h].getChildren().add(rectangle);
                     }
                 }
             }
@@ -290,13 +306,13 @@ public class Execlass extends Application{
         paneArray[index].setOnMouseExited(e -> {
             if (process.getUnitInProcess() != null) {
                 for (int h : hullSectors) {
-                    if ((j + h) >= 0 && (j + h) < 100) {
-                        paneArray[j + h].getChildren().removeAll(paneArray[j + h].getChildren());
+                    if ((index + h) >= 0 && (index + h) < 100) {
+                        paneArray[index + h].getChildren().removeAll(paneArray[index + h].getChildren());
                     }
                 }
             }
-            process.setPlacementAllowed(true);
-        });
+            process.allowPlacement(true);
+            });
         paneArray[index].setOnMouseClicked(e -> {
             if (process.getGamestate() == 1) {
                 if (process.getUnitInProcess() != null) {
@@ -307,16 +323,93 @@ public class Execlass extends Application{
                     label1.setText("pick the ship first");
                 }
             }
-            if (process.getGamestate() == 3) {
-                fire(sector);
-            }
         });
+    }
+
+    void createShootablePanes() {
+        System.out.println("f. createShootablePanes invoked");
+        Rectangle reticle = new Rectangle(30, 30, Color.TRANSPARENT);
+        reticle.setX(8);
+        reticle.setY(8);
+        reticle.setStrokeWidth(2);
+
+        for (Sector sector : process.getP2sectors()) {
+            Pane pane = new Pane();
+            grid2.add(pane, sector.getCoordinateX(), sector.getCoordinateY());
+            pane.setOnMouseEntered(e -> {
+                    if (sector.getStatus().startsWith("exposed")) {
+                        reticle.setStroke(Color.valueOf("#ff0000"));
+                    } else {
+                        reticle.setStroke(Color.valueOf("#ffff00"));
+                        process.allowFire(true);
+                    }
+                    pane.getChildren().add(reticle);
+            });
+            pane.setOnMouseExited(e -> {
+                pane.getChildren().removeAll();
+                process.allowFire(false);
+            });
+            pane.setOnMouseClicked(e -> {
+                if (process.isFireFree()) {
+                    fire(sector);
+                }
+            });
+        }
     }
 
     void fire(Sector sector) {
         // tu powinna być animacja strzału, ale nie będzie bo nie ma czasu.
+        GridPane grid = null;
+        int areaToShootAt = sector.getPlayer();
+        int x = sector.getCoordinateX();
+        int y = sector.getCoordinateY();
+        String result;
+        if (areaToShootAt == 1) {
+            grid = grid1;
+        }
+        if (areaToShootAt == 2) {
+            grid = grid2;
+        }
         String status = sector.getStatus();
-        sector.setStatus("hit");
+        switch (status) {
+            case "concealed_clear":
+                result = "exposed_clear";
+                sector.setStatus(result);
+                ImageView missed = new ImageView(splash);
+                grid.add(missed, x, y);
+                break;
+            case "concealed_hull":
+                result = "exposed_hull";
+                sector.setStatus(result);
+                ImageView hit = new ImageView(targetHit);
+                grid.add(hit, x, y);
+                break;
+            case "concealed_origin":
+                result = "exposed_origin";
+                sector.setStatus(result);
+                ImageView criticalHit = new ImageView(targetHit);
+                grid.add(criticalHit, x, y);
+                break;
+            default:
+                return;
+        }
+        proceed(areaToShootAt);
+    }
+
+    void proceed(int playerIsNext) {
+        process.setGamestate(playerIsNext + 2);
+        if (process.getGamestate() == 3) {}
+        if (process.getGamestate() == 4) {
+            // gdy dodamy możliwość grania na 2 graczy - dodać warunek do computerIsShooting()
+            Sector targetSector = process.computerIsShooting();
+            process.setGamestate(3);
+            try {
+                Thread.sleep(2000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            fire(targetSector);
+        }
     }
 
     @Override
@@ -362,8 +455,6 @@ public class Execlass extends Application{
         grid2.setGridLinesVisible(true);
         grid3.setGridLinesVisible(true);
 
-
-
         int index1 = 0;
         for (Sector sector : process.getP1sectors()) {
             createClickablePanes(paneArrayP1, sector, index1, grid1);
@@ -372,90 +463,10 @@ public class Execlass extends Application{
         int index2 = 0;
         for (Sector sector : process.getP2sectors()) {
             createClickablePanes(paneArrayP2, sector, index2, grid2);
-
-            /*
-            paneArray[index] = new Pane();
-            grid1.add(paneArray[index], sector.getCoordinateX(), sector.getCoordinateY());
-            int j = index;
-            paneArray[index].setOnMouseEntered(e -> {
-                if (process.getUnitInProcess() != null) {
-//                    System.out.println("--------- entering sector");
-                    process.alignHull(process.getP1sectors(), sector, process.getUnitInProcess(), false);
-//                    System.out.println("sector restriction: " + process.isPlacementAllowed());
-                    int size = process.getUnitInProcess().getShipSize();
-                    int offset = (size + 1) / 4;
-                    int element, dir;
-                    if (process.getUnitInProcess().getHeading() == 270) {
-                        dir = 10;
-                    } else {
-                        dir = 1;
-                    }
-                    for (int n = -offset; n < size - offset; n ++) {
-                        element = n * dir;
-                        hullSectors.add(element);
-                    }
-                    for (int h : hullSectors) {
-                        Rectangle rectangle = new Rectangle(30, 30, Color.TRANSPARENT);
-                        rectangle.setX(8);
-                        rectangle.setY(8);
-                        if (process.isPlacementAllowed()) {
-                            rectangle.setStroke(Color.valueOf("#00ff00"));
-                        } else {
-                            rectangle.setStroke(Color.valueOf("#ff0000"));
-                        }
-                        rectangle.setStrokeWidth(2);
-                        if ((j + h) >= 0 && (j + h) < 100) {
-                            paneArray[j + h].getChildren().add(rectangle);
-                        }
-                    }
-                }
-            });
-            paneArray[index].setOnMouseExited(e -> {
-                if (process.getUnitInProcess() != null) {
-                    for (int h : hullSectors) {
-                        if ((j + h) >= 0 && (j + h) < 100) {
-                            paneArray[j + h].getChildren().removeAll(paneArray[j + h].getChildren());
-                        }
-                    }
-                }
-                process.setPlacementAllowed(true);
-            });
-            paneArray[index].setOnMouseClicked(e -> {
-                if (process.getGamestate() == 1) {
-                    if (process.getUnitInProcess() != null) {
-                        if (process.isPlacementAllowed()) {
-                            place(sector, process.getUnitInProcess());
-                        }
-                    } else {
-                        label1.setText("pick the ship first");
-                    }
-                }
-                if (process.getGamestate() == 3) {
-                    fire(sector);
-                }
-            });
-             */
             index2++;
         }
         // FIXME - podczas ustawiania jednostek zostają zielone kwadraty, a nie powinny.
-
         // czy da się napisać tak by lambda podała "e" do pick() ?
-
-        /*
-        todo - odkomnetować to później
-        for (Sector sector2p : process.getP2sectors()) {
-            Pane sectorPane2 = new Pane();
-            grid2.add(sectorPane2, sector2p.getCoordinateX(), sector2p.getCoordinateY());
-            sectorPane2.setOnMouseClicked(e -> {
-                if (process.getGamestate() == 2) {
-                    place(sector2p);
-                }
-                if (process.getGamestate() == 3) {
-                    fire(sector2p);
-                }
-            }   );
-        }
-         */
 
         label1.setPadding(new Insets(0, 50, 0, 120));
         label1.setFont(new Font("Arial", 32));
@@ -507,6 +518,8 @@ public class Execlass extends Application{
         enterButton.setFont(new Font("Arial", 20));
         enterButton.setOnAction(e -> {
             buttonActions();
+            showArea(process.getP1sectors(), grid1);
+            visualCheck = false;
         });
 
         clearButton.setFont(new Font("Arial", 20));
@@ -562,6 +575,10 @@ public class Execlass extends Application{
             }
             updateUnitCounter();
         });
+        Button extraButton = new Button("test1");
+        extraButton.setFont(new Font("Arial", 20));
+        grid2.add(extraButton, 6, 2, 4, 1);
+        extraButton.setOnAction(e -> process.testFunction());
 
         grid0.add(grid1, 0, 0);
         grid0.add(grid2, 1, 0);

@@ -11,6 +11,7 @@ public class Process {
     private int gamestate = -1;
     private Ship unitInProcess;
     private boolean placementAllowed = true;
+    private boolean fireFree = false;
     private final List<Sector> p1sectors = new LinkedList<>();
     private final List<Sector> p2sectors = new LinkedList<>();
     private List<Sector> dummies = new ArrayList<>();
@@ -258,10 +259,44 @@ public class Process {
         }
     }
 
+    void rebuildSectors() {
+        int i = 2;
+        List<Sector> sectorList = null;
+        while (i > 0) {
+            if (i == 2) {
+                sectorList = p2sectors;
+            }
+            if (i == 1) {
+                sectorList = p1sectors;
+            }
+            for (Sector sector : sectorList) {
+                switch (sector.getStatus()) {
+                    case "proximity":
+                    case "nothing":
+                        sector.setStatus("concealed_clear");
+                        break;
+                    case "hull":
+                        sector.setStatus("concealed_hull");
+                        break;
+                    case "origin":
+                        sector.setStatus("concealed_origin");
+                }
+            }
+            i --;
+        }
+    }
 
-    //funkcja salwy - być może do kasacji bo jest w Execlass
-    int fire(Sector sector, int gamestate) {
-        return 0;
+    boolean isFireFree() {
+        return fireFree;
+    }
+
+    void evaluate() {
+    }
+
+    Sector computerIsShooting() {
+        Random random = new Random();
+        int target = random.nextInt(100);
+        return p1sectors.get(target);
     }
 
     //funkcja wykrywania trafień
@@ -301,6 +336,10 @@ public class Process {
         return placementAllowed;
     }
 
+    public void allowFire(boolean fireFree) {
+        this.fireFree = fireFree;
+    }
+
     public List<Ship> getP1fleet() {
         return p1fleet;
     }
@@ -309,7 +348,7 @@ public class Process {
         return p2fleet;
     }
 
-    public void setPlacementAllowed(boolean allowed) {
+    public void allowPlacement(boolean allowed) {
         this.placementAllowed = allowed;
     }
 
@@ -324,5 +363,10 @@ public class Process {
             String s2 = p2sectors.get(i).toString();
             System.out.println(s1 + "|||" + s2);
         }
+    }
+    // funkcja do testów
+    void testFunction() {
+        Execlass instance = new Execlass();
+        instance.buttonActions();
     }
 }

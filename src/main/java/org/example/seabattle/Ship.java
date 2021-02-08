@@ -2,8 +2,7 @@ package org.example.seabattle;
 
 public class Ship {
     private final String shipType;
-    private String shipStatus; // hidden, sunk, exposed
-    private int damage;
+    private boolean sunk;
     private int heading = 0;
     private int shipSize;
     private int locationX = 0;
@@ -24,12 +23,8 @@ public class Ship {
         return shipType;
     }
 
-    public String getShipStatus() {
-        return shipStatus;
-    }
-
-    public int getDamage() {
-        return damage;
+    public boolean getSunk() {
+        return sunk;
     }
 
     public int getHeading() {
@@ -48,12 +43,8 @@ public class Ship {
         return locationY;
     }
 
-    public void setShipStatus(String shipStatus) {
-        this.shipStatus = shipStatus;
-    }
-
-    public void setDamage(int damage) {
-        this.damage = damage;
+    public void setSunk(boolean sunk) {
+        this.sunk = sunk;
     }
 
     public void setHeading(int heading) {
