@@ -290,13 +290,64 @@ public class Process {
         return fireFree;
     }
 
-    void evaluate() {
-    }
-
     Sector computerIsShooting() {
         Random random = new Random();
         int target = random.nextInt(100);
         return p1sectors.get(target);
+    }
+
+    int evaluate() {
+        int sunk1 = 0, sunk2 = 0;
+        for (Ship ship1 : p1fleet) {
+            if (ship1.getSunk()) {
+                sunk1 ++;
+            }
+        }
+        for (Ship ship2 : p2fleet) {
+            if (ship2.getSunk()) {
+                sunk2 ++;
+            }
+        }
+        int remains1 = 10 - sunk1;
+        int remains2 = 10 - sunk2;
+        if (gamestate == 5) {
+            int score1 = 0, score2 = 0;
+            if (remains1 > remains2) {
+                return 1;
+            }
+            if (remains2 > remains1) {
+                return 2;
+            }
+            if (remains1 == remains2) {
+                for (Sector s1 : p1sectors) {
+                    if (s1.getStatus().equals("exposed_hull") || s1.getStatus().equals("exposed_origin")) {
+                        score1 ++;
+                    }
+                }
+                for (Sector s2 : p2sectors) {
+                    if (s2.getStatus().equals("exposed_hull") || s2.getStatus().equals("exposed_origin")) {
+                        score2 ++;
+                    }
+                }
+                if (score1 > score2) {
+                    return 1;
+                }
+                if (score2 > score1) {
+                    return 2;
+                } else {
+                    return 3;
+                }
+            }
+        } else {
+            if (remains1 < 1) {
+                return 2;
+            }
+            if (remains2 < 1) {
+                return 1;
+            }
+        }
+        System.out.println("remains1= " + remains1 + "; remains2= " + remains2);
+        return 0;
     }
 
     //funkcja wykrywania trafień
@@ -363,10 +414,5 @@ public class Process {
             String s2 = p2sectors.get(i).toString();
             System.out.println(s1 + "|||" + s2);
         }
-    }
-    // funkcja do testów
-    void testFunction() {
-        Execlass instance = new Execlass();
-        instance.buttonActions();
     }
 }

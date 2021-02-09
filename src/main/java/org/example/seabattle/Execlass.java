@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Execlass extends Application{
+    // później przenieść pliki png gdzieś gdzie będą dostępne po kompilacji (poza src)
     private final Image field = new Image("file:src/main/resources/field.png");
     private final Image x1unit = new Image("file:src/main/resources/unit1.png");
     private final Image x2unit = new Image("file:src/main/resources/unit2.png");
@@ -351,18 +352,19 @@ public class Execlass extends Application{
             });
             pane.setOnMouseClicked(e -> {
                 if (process.isFireFree()) {
-                    fire(sector);
+                    nextTurn(sector);
                 }
             });
         }
     }
 
-    void fire(Sector sector) {
+    boolean fire(Sector sector) {
         // tu powinna być animacja strzału, ale nie będzie bo nie ma czasu.
         GridPane grid = null;
         int areaToShootAt = sector.getPlayer();
         int x = sector.getCoordinateX();
         int y = sector.getCoordinateY();
+        boolean unitHit = false;
         String result;
         if (areaToShootAt == 1) {
             grid = grid1;
@@ -383,33 +385,40 @@ public class Execlass extends Application{
                 sector.setStatus(result);
                 ImageView hit = new ImageView(targetHit);
                 grid.add(hit, x, y);
+                unitHit = true;
                 break;
             case "concealed_origin":
                 result = "exposed_origin";
                 sector.setStatus(result);
                 ImageView criticalHit = new ImageView(targetHit);
                 grid.add(criticalHit, x, y);
+                unitHit = true;
                 break;
             default:
-                return;
+                return false;
         }
-        proceed(areaToShootAt);
+        return unitHit;
     }
 
-    void proceed(int playerIsNext) {
-        process.setGamestate(playerIsNext + 2);
-        if (process.getGamestate() == 3) {}
-        if (process.getGamestate() == 4) {
+    void nextTurn(Sector sector) {
+        boolean streak;
+        streak = fire(sector);
+        if (streak)
+            return;
+        process.setGamestate(4);
+        do {
             // gdy dodamy możliwość grania na 2 graczy - dodać warunek do computerIsShooting()
             Sector targetSector = process.computerIsShooting();
-            process.setGamestate(3);
             try {
-                Thread.sleep(2000);
+                Thread.sleep(100);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            fire(targetSector);
-        }
+            streak = fire(targetSector);
+        } while (streak);
+        process.setGamestate(3);
+        int evaluation = process.evaluate();
+        System.out.println(evaluation);
     }
 
     @Override
@@ -565,7 +574,6 @@ public class Execlass extends Application{
         autoStepDeplBtn.setFont(new Font("Arial", 20));
         grid2.add(autoStepDeplBtn, 6, 0, 4, 1);
         autoStepDeplBtn.setOnAction(e -> {
-            System.out.println("---- auto deployment once ----");
             process.autoDeploySingleUnit();
             if (process.getGamestate() == 1) {
                 showArea(process.getP1sectors(), grid1);
@@ -575,10 +583,6 @@ public class Execlass extends Application{
             }
             updateUnitCounter();
         });
-        Button extraButton = new Button("test1");
-        extraButton.setFont(new Font("Arial", 20));
-        grid2.add(extraButton, 6, 2, 4, 1);
-        extraButton.setOnAction(e -> process.testFunction());
 
         grid0.add(grid1, 0, 0);
         grid0.add(grid2, 1, 0);
