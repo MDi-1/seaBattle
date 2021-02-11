@@ -298,8 +298,32 @@ public class Process {
         for (int i = 0; i < 3; i ++) {
             index = random.nextInt(100);
             Sector targetSector = p1sectors.get(index);
+            String status = targetSector.getStatus();
             if (!targetSector.getStatus().startsWith("exposed")) {
                 break;
+            }
+            if (status.equals("concealed_hull") || status.equals("concealed_origin")) {
+                int positionX = targetSector.getCoordinateX();
+                int positionY = targetSector.getCoordinateY();
+                // teraz chcemy skopiować sektor do "dummy list"
+                Sector dummy = new Sector(10, positionX, positionY);
+                int[] x = {-1, 0, 1};
+                int[] y = {-1, 0, 1};
+                // te tablice są bez sensu, może pętla for od -1 do 1
+                // sektory do odstrzału:
+                // flagX = x - 1; flagY = y - 1; status = "flag_empty"
+                // flagX = x + 0; flagY = y - 1; status = "flag_next_target"
+                // flagX = x + 1; flagY = y + 0; status = "flag_empty"
+                // flagX = x - 1; flagY = y + 0; status = "flag_next_target"
+                // flagX = x + 1; flagY = y + 1; status = "flag_empty"
+                // flagX = x + 0; flagY = y + 1; status = "flag_next_target"
+                // flagX = x - 1; flagY = y + 1; status = "flag_empty"
+                // flagX = x + 1; flagY = y - 0; status = "flag_next_target"
+
+
+
+
+
             }
         }
         return p1sectors.get(index);
