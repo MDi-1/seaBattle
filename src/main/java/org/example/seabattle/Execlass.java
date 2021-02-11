@@ -28,8 +28,8 @@ public class Execlass extends Application{
     private final Image splash = new Image("file:src/main/resources/splash.png");
     private final Image targetHit = new Image("file:src/main/resources/cross.png");
     private final Image proximity = new Image("file:src/main/resources/proximity.png");
-    private final Label label1 = new Label("label1 label1 label1");
-    private final Label label2 = new Label("label2 label2 label2");
+    private final Label label1 = new Label(" [ SEA BATTLE ] ");
+    private final Label label2 = new Label("");
     private GridPane grid1 = new GridPane();
     private GridPane grid2 = new GridPane();
     private GridPane grid3 = new GridPane();
@@ -46,10 +46,12 @@ public class Execlass extends Application{
     private Pane[] sidePaneArray = new Pane[4];
     Pane[] paneArrayP1 = new Pane[100];
     Pane[] paneArrayP2 = new Pane[100];
-    private Label[] unitCounter = new Label[4];
+    private final Label[] unitCounter = new Label[4];
     private int player2prepare = 1;
     private boolean visualCheck = true;
     private Process process = new Process();
+    private final Label scCount1 = new Label("Player 1 score: " + process.getScore1());
+    private final Label scCount2 = new Label("Player 2 score: " + process.getScore2());
 
     void clearArea() {
         grid1.getChildren().clear();
@@ -67,10 +69,14 @@ public class Execlass extends Application{
             case 0:
                 grid1.add(p1beginBtn, 2, 4, 7, 1);
                 grid3.getChildren().remove(starterBtn);
+                label1.setText("");
+                label2.setText("");
                 break;
             case 1:
                 grid3.add(rotateBtn, 1, 8, 3, 1);
                 grid2.add(p2beginBtn, 1, 4, 8, 1);
+                label1.setText("click on the right panel");
+                label2.setText("to pick unit");
                 grid1.getChildren().remove(p1beginBtn);
                 prepareFleet();
                 player2prepare = 1;
@@ -79,14 +85,21 @@ public class Execlass extends Application{
                 prepareFleet();
                 grid3.add(rotateBtn, 1, 8, 3, 1);
                 grid2.getChildren().clear();
+                label1.setText("");
+                label2.setText("");
                 visualCheck = false;
                 break;
             case 3:
                 visualCheck = true;
                 grid1.getChildren().clear();
                 grid2.getChildren().clear();
+                grid3.getChildren().remove(enterButton);
+                grid3.add(scCount1, 0, 3, 5, 1);
+                grid3.add(scCount2, 0, 5, 5, 1);
                 process.rebuildSectors();
                 createShootablePanes();
+                grid3.add(starterBtn, 0, 0, 5, 1);
+                starterBtn.setText("FINISH THE BATTLE");
         }
     }
 
@@ -136,7 +149,7 @@ public class Execlass extends Application{
         int subQuantity = 0;
         int cruQuantity = 0;
         int carQuantity = 0;
-        for (Ship ship : process.fleet) {
+        for (Ship ship : process.getFleet()) {
             switch (ship.getShipSize()) {
                 case 1:
                     helQuantity ++;
@@ -344,7 +357,9 @@ public class Execlass extends Application{
                         reticle.setStroke(Color.valueOf("#ffff00"));
                         process.allowFire(true);
                     }
-                    pane.getChildren().add(reticle);
+                    if (pane.getChildren().size() < 1) {
+                        pane.getChildren().add(reticle);
+                    }
             });
             pane.setOnMouseExited(e -> {
                 pane.getChildren().removeAll();
@@ -364,6 +379,7 @@ public class Execlass extends Application{
         int areaToShootAt = sector.getPlayer();
         int x = sector.getCoordinateX();
         int y = sector.getCoordinateY();
+        char a = (char) (y + 65);
         boolean unitHit = false;
         String result;
         if (areaToShootAt == 1) {
@@ -397,7 +413,19 @@ public class Execlass extends Application{
             default:
                 return false;
         }
-        return unitHit;
+        if (areaToShootAt == 2) {
+            if (unitHit) {
+                label2.setText("You hit enemy unit at: " + a  + (x + 1));
+            } else {
+                label2.setText("");
+            }
+            label1.setText("");
+        }
+        if (areaToShootAt == 1) {
+            if (unitHit) {
+                label1.setText("Your unit was hit at: " + a  + (x + 1));
+            }
+        } return unitHit;
     }
 
     void nextTurn(Sector sector) {
@@ -406,8 +434,8 @@ public class Execlass extends Application{
         if (streak)
             return;
         process.setGamestate(4);
-        do {
-            // gdy dodamy możliwość grania na 2 graczy - dodać warunek do computerIsShooting()
+        do {//gdy dodamy możliwość grania na 2 os.- dodać warunek do computerIsShooting()
+
             Sector targetSector = process.computerIsShooting();
             try {
                 Thread.sleep(100);
@@ -418,7 +446,26 @@ public class Execlass extends Application{
         } while (streak);
         process.setGamestate(3);
         int evaluation = process.evaluate();
-        System.out.println(evaluation);
+        if (evaluation != 0) {
+            finish(evaluation);
+        }
+    }
+
+    void finish(int player) {
+        int evaluation;
+        if (player == 0) {
+            evaluation = process.evaluate();
+            player = evaluation;
+        }
+        process.setGamestate(5);
+        grid2.getChildren().clear();
+        visualCheck = true;
+        showArea(process.getP1sectors(), grid1);
+        showArea(process.getP2sectors(), grid2);
+        grid3.getChildren().remove(starterBtn);
+        grid3.add(enterButton, 0, 6, 5, 1);
+        label1.setText("END OF GAME");
+        label2.setText("Player " + player + " wins.");
     }
 
     @Override
@@ -460,6 +507,7 @@ public class Execlass extends Application{
             grid2.getRowConstraints().add(rowConstr);
         }
         // siatka do usunięcia później
+        grid0.setGridLinesVisible(true);
         grid1.setGridLinesVisible(true);
         grid2.setGridLinesVisible(true);
         grid3.setGridLinesVisible(true);
@@ -477,14 +525,20 @@ public class Execlass extends Application{
         // FIXME - podczas ustawiania jednostek zostają zielone kwadraty, a nie powinny.
         // czy da się napisać tak by lambda podała "e" do pick() ?
 
-        label1.setPadding(new Insets(0, 50, 0, 120));
+        label1.setPadding(new Insets(0, 50, 50, 50));
         label1.setFont(new Font("Arial", 32));
         label1.setTextFill(Color.web("#FFF"));
         label1.setTextAlignment(TextAlignment.LEFT);
-        label2.setPadding(new Insets(0, 120, 0, 100));
+        label2.setPadding(new Insets(0, 50, 50, 140));
         label2.setFont(new Font("Arial", 32));
         label2.setTextFill(Color.web("#FFF"));
         label2.setTextAlignment(TextAlignment.JUSTIFY);
+        scCount1.setFont(new Font("Arial", 24));
+        scCount1.setTextFill(Color.web("#FFF"));
+        scCount1.setTextAlignment(TextAlignment.LEFT);
+        scCount2.setFont(new Font("Arial", 24));
+        scCount2.setTextFill(Color.web("#FFF"));
+        scCount2.setTextAlignment(TextAlignment.LEFT);
         activateAiBtn.setFont(new Font("Arial", 20));
         starterBtn.setFont(new Font("Arial", 20));
         p1beginBtn.setFont(new Font("Arial", 20));
@@ -492,7 +546,13 @@ public class Execlass extends Application{
         rotateBtn.setFont( new Font("Arial", 20));
         grid3.add(starterBtn, 0, 4, 4, 1);
 
-        starterBtn.setOnAction(e -> buttonActions());
+        starterBtn.setOnAction(e -> {
+            if (process.getGamestate() == -1) {
+                buttonActions();
+            } else {
+                finish(0);
+            }
+        });
         p1beginBtn.setOnAction(e -> buttonActions());
         p2beginBtn.setOnAction(e -> {
             grid1.getChildren().clear();
@@ -509,15 +569,10 @@ public class Execlass extends Application{
             buttonActions();
             grid3.getChildren().clear();
             player2preparation();
-            grid3.add(clearButton, 0, 0, 4, 1);
-            grid3.add(refreshButton, 0, 2, 4, 1);
+            grid3.add(clearButton, 0, 2, 4, 1);
+            grid3.add(refreshButton, 0, 4, 4, 1);
             grid3.add(enterButton, 0, 6, 5, 1);
-            visualCheck = true;
-            process.autoDeployAll();
-            showArea(process.getP1sectors(), grid1);
-            showArea(process.getP2sectors(), grid2);
-            updateUnitCounter();
-            visualCheck = false;
+            process.autoDeployAll(); //tu winien być argument którą flotę wstawić
         });
         rotateBtn.setOnAction(e -> {
             hullSectors.clear();
@@ -564,7 +619,6 @@ public class Execlass extends Application{
         resetButton.setFont(new Font("Arial", 20));
         grid2.add(resetButton, 0, 2, 4, 1);
         resetButton.setOnAction(e -> {
-            process = new Process();
             clearArea();
             showArea(process.getP1sectors(), grid1);
             showArea(process.getP2sectors(), grid2);
@@ -590,7 +644,13 @@ public class Execlass extends Application{
         grid0.add(label1, 0, 1);
         grid0.add(label2, 1, 1);
 
-        Scene scene = new Scene(grid0, 1400, 600, Color.BLACK);
+        ColumnConstraints constrX460 = new ColumnConstraints(460);
+        RowConstraints constrY560 = new RowConstraints(560);
+        grid0.getRowConstraints().add(constrY560);
+        grid0.getColumnConstraints().add(constrX460);
+
+
+        Scene scene = new Scene(grid0, 1400, 720, Color.BLACK);
         primaryStage.setTitle("seaBattle");
         primaryStage.setScene(scene);
         primaryStage.show();

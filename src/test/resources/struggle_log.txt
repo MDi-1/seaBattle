@@ -5,10 +5,16 @@ seaBattle
 '05-02-2021, 14:20 - chyba znalazłem błąd w auto deploy
 
 
-Elementy specyfikacji:
+Elementy specyfikacji / uwagi:
+
 przycisk "PLAY AGAINST COMP." -> autoDeploy() dla gracza2,
-wyświetlenie przycisku "ENTER THE BATTLE",
-przeniesienie przycisku "refresh"
+- 'wyświetlenie przycisku "ENTER THE BATTLE",
+- 'przeniesienie przycisku "refresh"
+
+'A gdyby tak nie pisać w Execlass polecenie: Process process = new Process(); tylko jakieś pośredniej klasie np. Logic i z niej wywoływać z doskoku funkcje Execlass oraz start().
+
+'f. buttonActions() powinna mieć argument zamiast domyślać się jaki jest atr. gamestate
+
 
 class Ship {
 

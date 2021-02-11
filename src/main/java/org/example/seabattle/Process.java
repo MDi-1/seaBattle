@@ -9,13 +9,15 @@ import java.util.Random;
 
 public class Process {
     private int gamestate = -1;
+    private int score1 = 0;
+    private int score2 = 0;
     private Ship unitInProcess;
     private boolean placementAllowed = true;
     private boolean fireFree = false;
     private final List<Sector> p1sectors = new LinkedList<>();
     private final List<Sector> p2sectors = new LinkedList<>();
     private List<Sector> dummies = new ArrayList<>();
-    List<Ship> fleet = new LinkedList<>();
+    private List<Ship> fleet = new LinkedList<>();
     List<Ship> p1fleet = new ArrayList<>();
     List<Ship> p2fleet = new ArrayList<>();
 
@@ -291,63 +293,39 @@ public class Process {
     }
 
     Sector computerIsShooting() {
+        int index = 0;
         Random random = new Random();
-        int target = random.nextInt(100);
-        return p1sectors.get(target);
+        for (int i = 0; i < 3; i ++) {
+            index = random.nextInt(100);
+            Sector targetSector = p1sectors.get(index);
+            if (!targetSector.getStatus().startsWith("exposed")) {
+                break;
+            }
+        }
+        return p1sectors.get(index);
     }
 
     int evaluate() {
-        int sunk1 = 0, sunk2 = 0;
-        for (Ship ship1 : p1fleet) {
-            if (ship1.getSunk()) {
-                sunk1 ++;
+        score1 = score2 = 0;
+        for (Sector s2 : p2sectors) {
+            if (s2.getStatus().equals("exposed_hull") || s2.getStatus().equals("exposed_origin")) {
+                score1 ++;
             }
         }
-        for (Ship ship2 : p2fleet) {
-            if (ship2.getSunk()) {
-                sunk2 ++;
+        for (Sector s1 : p1sectors) {
+            if (s1.getStatus().equals("exposed_hull") || s1.getStatus().equals("exposed_origin")) {
+                score2 ++;
             }
         }
-        int remains1 = 10 - sunk1;
-        int remains2 = 10 - sunk2;
-        if (gamestate == 5) {
-            int score1 = 0, score2 = 0;
-            if (remains1 > remains2) {
+        System.out.println("score1= " + score1 + "; score2= " + score2);
+        if (score1 >= 20 || score2 >= 20) {
+            if (score1 > score2) {
                 return 1;
             }
-            if (remains2 > remains1) {
+            if (score2 > score1) {
                 return 2;
             }
-            if (remains1 == remains2) {
-                for (Sector s1 : p1sectors) {
-                    if (s1.getStatus().equals("exposed_hull") || s1.getStatus().equals("exposed_origin")) {
-                        score1 ++;
-                    }
-                }
-                for (Sector s2 : p2sectors) {
-                    if (s2.getStatus().equals("exposed_hull") || s2.getStatus().equals("exposed_origin")) {
-                        score2 ++;
-                    }
-                }
-                if (score1 > score2) {
-                    return 1;
-                }
-                if (score2 > score1) {
-                    return 2;
-                } else {
-                    return 3;
-                }
-            }
-        } else {
-            if (remains1 < 1) {
-                return 2;
-            }
-            if (remains2 < 1) {
-                return 1;
-            }
-        }
-        System.out.println("remains1= " + remains1 + "; remains2= " + remains2);
-        return 0;
+        } return 0;
     }
 
     //funkcja wykrywania trafień
@@ -374,6 +352,14 @@ public class Process {
 
     public List<Sector> getP2sectors() {
         return p2sectors;
+    }
+
+    public int getScore1() {
+        return score1;
+    }
+
+    public int getScore2() {
+        return score2;
     }
 
     public List<Ship> getFleet() {
