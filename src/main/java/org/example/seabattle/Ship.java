@@ -12,7 +12,7 @@ public class Ship {
         this.shipType = type;
 
         switch (type.substring(0, 3)) {
-            case "car":  this.shipSize = 4;   break;
+            case "car":  this.shipSize = 4;  break;
             case "cru":  this.shipSize = 3;  break;
             case "sub":  this.shipSize = 2;  break;
             case "hel":  this.shipSize = 1;  break;

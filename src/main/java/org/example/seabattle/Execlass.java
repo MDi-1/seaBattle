@@ -425,6 +425,8 @@ public class Execlass extends Application{
             if (unitHit) {
                 label1.setText("Your unit was hit at: " + a  + (x + 1));
             }
+            // zmienić to jeśli będzie funkcjonalność na 2 graczy
+            process.setSectorInProcess(sector);
         } return unitHit;
     }
 
@@ -435,13 +437,19 @@ public class Execlass extends Application{
             return;
         process.setGamestate(4);
         do {//gdy dodamy możliwość grania na 2 os.- dodać warunek do computerIsShooting()
-
             Sector targetSector = process.computerIsShooting();
             try {
                 Thread.sleep(100);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
+
+            // test blok
+            int x = targetSector.getCoordinateX();
+            int y = targetSector.getCoordinateY();
+            char a = (char) (y + 65);
+            System.out.println("computer is shooting at " + a  + (x + 1));
+
             streak = fire(targetSector);
         } while (streak);
         process.setGamestate(3);

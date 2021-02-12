@@ -15,6 +15,19 @@ przycisk "PLAY AGAINST COMP." -> autoDeploy() dla gracza2,
 
 'f. buttonActions() powinna mieć argument zamiast domyślać się jaki jest atr. gamestate
 
+'Sposób flagowania sektorów tak by funkcja computerIsShooting() mogła sensownie strzelać w kolejnych próbach / kolejkach
+'sektory oflagowane w I kroku:
+ flagX = x - 1; flagY = y - 1; status = "flag_empty"
+ flagX = x + 0; flagY = y - 1; status = "flag_next1"
+ flagX = x + 1; flagY = y - 1; status = "flag_empty"
+ flagX = x + 1; flagY = y + 0; status = "flag_next1"
+ flagX = x + 1; flagY = y + 1; status = "flag_empty"
+ flagX = x + 0; flagY = y + 1; status = "flag_next1"
+ flagX = x - 1; flagY = y + 1; status = "flag_empty"
+ flagX = x - 1; flagY = y + 0; status = "flag_next1"
+ 'w II kroku status będzie "flag_next2" zamiast "flag_next1"
+
+
 
 class Ship {
 
