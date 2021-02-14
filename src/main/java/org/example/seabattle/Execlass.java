@@ -104,7 +104,7 @@ public class Execlass extends Application{
     }
 
     void prepareFleet() {
-        process.createUnits();
+        process.createTmpFleet();
         for (int idx = 4; idx > 0; idx--) {
             Image imgName = null;
             String shipName = "nothing";
@@ -425,19 +425,29 @@ public class Execlass extends Application{
             if (unitHit) {
                 label1.setText("Your unit was hit at: " + a  + (x + 1));
             }
-            // zmienić to jeśli będzie funkcjonalność na 2 graczy
+            // setSectorInProcess attribute is used by computer player.
+            // When 2 human players functionality is introduced this line has to be changed.
             process.setSectorInProcess(sector);
         } return unitHit;
     }
 
     void nextTurn(Sector sector) {
+
         boolean streak;
         streak = fire(sector);
         if (streak)
             return;
         process.setGamestate(4);
         do {//gdy dodamy możliwość grania na 2 os.- dodać warunek do computerIsShooting()
-            Sector targetSector = process.computerIsShooting();
+            int sunkCheck = process.getSunkQuantity();
+            boolean destroyed = false;
+            int sunkAmount = process.defineSunk(1);
+            process.setSunkQuantity(sunkAmount);
+            if (sunkCheck != process.getSunkQuantity()) {
+                destroyed = true;
+            } // spróbować zebrać sunkCheck w zewn. funkcję
+            // sunkCheck w tym miejscu działa na razie tylko dla komputera
+            Sector targetSector = process.computerIsShooting(destroyed);
             try {
                 Thread.sleep(100);
             } catch (InterruptedException e) {
@@ -607,6 +617,9 @@ public class Execlass extends Application{
             showArea(process.getP1sectors(), grid1);
             showArea(process.getP2sectors(), grid2);
             visualCheck = false;
+            Service service = new Service();
+            service.printout(process.fleet1hulls, "p1 hulls");
+            service.printout(process.fleet2hulls, "p2 hulls");
         });
         Button autoButton = new Button("auto deploy");
         autoButton.setFont(new Font("Arial", 20));

@@ -5,6 +5,7 @@ public class Sector {
     private final int coordinateX;
     private final int coordinateY;
     private String status = "nothing";
+    private String takenBy;
 
 
     public Sector(int player, int coordinateX, int coordinateY) {
@@ -21,6 +22,10 @@ public class Sector {
         return status;
     }
 
+    public String getTakenBy() {
+        return takenBy;
+    }
+
     public int getCoordinateX() {
         return coordinateX;
     }
@@ -31,6 +36,10 @@ public class Sector {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public void setTakenBy(String takenBy) {
+        this.takenBy = takenBy;
     }
 
     @Override

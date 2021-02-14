@@ -15,6 +15,7 @@ public class Process {
     private Sector sectorInProcess;
     private boolean placementAllowed = true;
     private boolean fireFree = false;
+    private int sunkQuantity = 0;
     private final List<Sector> p1sectors = new LinkedList<>();
     private final List<Sector> p2sectors = new LinkedList<>();
     private List<Sector> dummies = new ArrayList<>();
@@ -23,6 +24,12 @@ public class Process {
     private List<Ship> fleet = new LinkedList<>();
     private List<Ship> p1fleet = new ArrayList<>();
     private List<Ship> p2fleet = new ArrayList<>();
+    private final String[] types = {
+            "carrier", "cruiser1", "cruiser2", "sub1", "sub2", "sub3", "heli1", "heli2", "heli3", "heli4" };
+    List<Sector> fleet1hulls = new ArrayList<>();
+    List<Sector> fleet2hulls = new ArrayList<>();
+    Service service = new Service(); // delete this as soon as app is ready for production.
+    Random random = new Random();
 
     public Process() {
         for (int i = 0; i < 100; i ++) {
@@ -30,18 +37,15 @@ public class Process {
             int x = i - y * 10;
             p1sectors.add(new Sector(1, y, x));
             p2sectors.add(new Sector(2, y, x));
-            leftToShoot.add(new Sector(2, y, x));
         }
     }
 
-    List<Ship> createUnits() {
+    void createTmpFleet() {
         fleet.clear();
-        String[] types = {
-             "carrier", "cruiser1", "cruiser2", "sub1", "sub2", "sub3", "heli1", "heli2", "heli3", "heli4" };
         for (String newUnit : types) {
             Ship theUnit = new Ship(newUnit);
             fleet.add(theUnit);
-        } return fleet;
+        }
     }
 
     void pickUnit(String fullType) {
@@ -100,6 +104,8 @@ public class Process {
         }
         int x = passedSector.getCoordinateX();
         int y = passedSector.getCoordinateY();
+        int player = passedSector.getPlayer();
+        String name = exeShip.getShipType();
         int unitSize = exeShip.getShipSize();
         int heading = exeShip.getHeading();
         int offset = (unitSize + 1) / 4;
@@ -130,6 +136,13 @@ public class Process {
 //                    System.out.print(" X= " + modifierX + "; Y= " + modifierY + " / ");
                     if (deploying) {
                         iteratedSector.setStatus("hull");
+                        iteratedSector.setTakenBy(name);
+                        if (player == 1) {
+                            fleet1hulls.add(iteratedSector);
+                        }
+                        if (player == 2) {
+                            fleet2hulls.add(iteratedSector);
+                        }
                     } else {
                         Sector dummy = new Sector(0, resultX, resultY);
                         dummies.add(dummy);
@@ -211,7 +224,6 @@ public class Process {
     void autoDeploySingleUnit() {
         // tu okazuje się że fleet zamiast być listą powinna być kolejką FIFO
         Ship ship = fleet.get(0);
-        Random random = new Random();
         int x = random.nextInt(10);
         int y = random.nextInt(10);
         boolean h = random.nextBoolean();
@@ -288,12 +300,14 @@ public class Process {
                     case "origin":
                         sector.setStatus("concealed_origin");
                 }
-            }
-            i --;
+                if (sector.getPlayer() == 1) {
+                    leftToShoot.add(sector);
+                }
+            } i --;
         }
     }
 
-    Sector computerIsShooting() {
+    Sector computerIsShooting(boolean wasDestroyed) {
 // trzeba napisać usuwanie sektorów- końcówek
 // jeśli komputer zorientował się że zatopił całą jednostkę
 // w sumie tą funkcjonalność można napisać dla obu graczy
@@ -303,129 +317,86 @@ public class Process {
 // ile zostało jednostek do zatopienia (- po trafionym zatopionym)
 
 // wyrzucanie jako text na konsolę listy obliczonych jako puste
-        System.out.print("dummies: ");
-        for (Sector dummy : dummies) {
-            int dummyX = dummy.getCoordinateY();
-            int dummyY = dummy.getCoordinateY();
-            System.out.print("x= " + dummyX + "; y= " + dummyY);
-        }
-        System.out.println();
-
-
-// usuwanie odkrytych z listy pozostałych do strzału
-        Sector sectorInLastShot = sectorInProcess;
-        removeSector(sectorInLastShot);
-        /*
-        for (Sector exposedSector : p1sectors) {
-            if (exposedSector.getStatus().startsWith("exposed")) {
-                int x = exposedSector.getCoordinateX();
-                int y = exposedSector.getCoordinateY();
-                for (Sector sectorToRemove : leftToShoot) {
-                    if (sectorToRemove.getCoordinateX() == x
-                            && sectorToRemove.getCoordinateY() == y) {
-                        leftToShoot.remove(sectorToRemove);
+        service.printout(dummies, "dummies");
+// usuwanie sektorów "exposed" z listy pozostałych do strzału
+        if (sectorInProcess != null) {
+            Sector lastShot = sectorInProcess;
+            removeSectorFromLeftToShoot(lastShot);
+// flagowanie na puste (dummy) i potencjalne cele
+            if (lastShot.getStatus().equals("exposed_hull") || lastShot.getStatus().equals("exposed_origin")) {
+                int[] dx = {-1, 0, 1, 1, 1, 0, -1, -1};
+                int[] dy = {-1, -1, -1, 0, 1, 1, 1, 0};
+                boolean swap = true;
+                for (int n = 0; n < 8; n++) {
+                    int newX = lastShot.getCoordinateX() + dx[n];
+                    int newY = lastShot.getCoordinateY() + dy[n];
+                    if (newX < 0 || newY < 0 || newX > 9 || newY > 9) {
+                        break;
                     }
+                    Sector flagged = new Sector(5, newX, newY);
+                    if (swap) {
+                        dummies.add(flagged);
+                    } else {
+                        potentialTargets.add(flagged);
+                    }
+                    swap = !swap;
+                }
+                if (wasDestroyed) {
+                    dummies.addAll(potentialTargets);
+                    potentialTargets.clear();
                 }
             }
-        }
-         */
-
-
- // usuwanie obliczonych jako puste (dummy) z listy pozostałych do strzału
-        for (Sector dummy : dummies) {
-            removeSector(dummy);
-        }
-        /*
-        for (Sector dummy : dummies) {
-            int dummyX = dummy.getCoordinateY();
-            int dummyY = dummy.getCoordinateY();
-            for (Sector sectorToRemove : leftToShoot) {
-                if (sectorToRemove.getCoordinateX() == dummyX
-                        && sectorToRemove.getCoordinateY() == dummyY) {
-                    leftToShoot.remove(sectorToRemove);
-                }
+// usuwanie obliczonych jako puste (dummy) z listy pozostałych do strzału
+            for (Sector dummy : dummies) {
+                removeSectorFromLeftToShoot(dummy);
             }
         }
-
-         */
-
-
 // strzelanie do sektorów obliczonych jako potencjalne cele
         Sector currentTarget = null;
-        int index = 0;
-        String status = "";
+        int index;
         if (potentialTargets.size() > 0) {
             Sector tmpTarget = potentialTargets.get(0);
             potentialTargets.remove(0);
             int tmpX = tmpTarget.getCoordinateX();
             int tmpY = tmpTarget.getCoordinateY();
-            for (Sector theSector : p1sectors) {
-                if (theSector.getCoordinateX() == tmpX
-                        && theSector.getCoordinateY() == tmpY) {
-                    currentTarget = theSector;
+            for (Sector sector : p1sectors) { // kandydat na użycie findSector() ?
+                if (sector.getCoordinateX() == tmpX && sector.getCoordinateY() == tmpY) {
+                    currentTarget = sector;
                 }
             }
         } else {
-
-
-
 // losowanie sektora z listy do strzału
-            Random random = new Random();
             index = random.nextInt(leftToShoot.size());
-            //System.out.println("random sector index= " + index);
-            currentTarget = p1sectors.get(index);
-            status = currentTarget.getStatus();
+            currentTarget = findSector(p1sectors, leftToShoot.get(index));
         }
-
-
-        if (status.equals("concealed_hull") || status.equals("concealed_origin")) {
-// flagowanie na puste (dummy) i potencjalne cele
-            int[] dx = {-1, 0, 1, 1, 1, 0, -1, -1};
-            int[] dy = {-1, -1, -1, 0, 1, 1, 1, 0};
-            boolean swapStatus = true;
-            for (int n = 0; n < 8; n ++) {
-                int newX = currentTarget.getCoordinateX() + dx[n];
-                int newY = currentTarget.getCoordinateY() + dy[n];
-                if (newX < 0 || newY < 0 || newX > 9 || newY > 9) {
-                    break;
-                }
-                boolean makeAbreak = false;
-                for (Sector sector : p1sectors) {
-                    if (sector.getCoordinateX() == newX
-                            && sector.getCoordinateY() == newY
-                            && sector.getStatus().equals("exposed_clear")) {
-                            makeAbreak = true;
-                    }
-                }
-                if (makeAbreak) {
-                    break;
-                }
-                Sector flagged = new Sector(5, newX, newY);
-                if (swapStatus) {
-                    dummies.add(flagged);
-                } else {
-                    potentialTargets.add(flagged);
-                }
-                swapStatus = !swapStatus;
-            }
-        }
+        this.sectorInProcess = null;
 // dążę do tego by nie używać listy "dummy" zamiast tego nadawać
 // odpowiedni status na liście "leftToShoot".
 // (ale w sumie listę dummy można zostawić jako produkt kontrolny)
-        return p1sectors.get(index);
+        return currentTarget;
     }
 
 // w tej grze ta funkcja używana jest tylko przez komputer, dlatego funkcja
 // usuwa zawsze z listy "leftToShoot"
-    void removeSector(Sector sector) {
+    void removeSectorFromLeftToShoot(Sector sector) {
         int x = sector.getCoordinateX();
         int y = sector.getCoordinateY();
-        for (Sector sectorToRemove : leftToShoot) {
-            if (sectorToRemove.getCoordinateX() == x
-                    && sectorToRemove.getCoordinateY() == y) {
-                leftToShoot.remove(sectorToRemove);
+        leftToShoot.removeIf(
+                toRemove -> toRemove.getCoordinateX() == x && toRemove.getCoordinateY() == y);
+    }
+
+// wyszukuje i zwraca po x, y
+    Sector findSector(List<Sector> sectorList, Sector sectorSample) {
+        int x = sectorSample.getCoordinateX();
+        int y = sectorSample.getCoordinateY();
+        Sector sectorToGet = null;
+        for (Sector sector : sectorList) {
+            if (sector.getCoordinateX() == x && sector.getCoordinateY() == y) {
+                sectorToGet = sector;
+            } else {
+                System.out.println("method findSector() have not found any sector");
             }
-        }
+        } return sectorToGet;
     }
 
     int evaluate() {
@@ -449,6 +420,42 @@ public class Process {
                 return 2;
             }
         } return 0;
+    }
+
+    int defineSunk(int playerToShootAt) {
+        List<Sector> fleetHullSectors;
+        List<Ship> playerShips;
+        if (playerToShootAt == 1) {
+            fleetHullSectors = fleet1hulls;
+            playerShips = p1fleet;
+        } else {
+            fleetHullSectors = fleet2hulls;
+            playerShips = p2fleet;
+        }
+        int sectorCount = 0;
+        for (String unitName : types) {
+            Sector shipOnSector = null;
+            for (Sector sector : fleetHullSectors) {
+                shipOnSector = sector;
+                if (shipOnSector.getTakenBy().equals(unitName)) {
+                    sectorCount++;
+                }
+            }
+            if (sectorCount < 1) {
+                String name = shipOnSector.getTakenBy();
+                for (Ship ship : playerShips) {
+                    if (ship.getShipType().equals(name)) {
+                        ship.setSunk(true);
+                    }
+                }
+            }
+        }
+        int i = 0;
+        for (Ship ship : playerShips) {
+            if (ship.getSunk()) {
+                i ++;
+            }
+        } return i;
     }
 
     boolean isFireFree() {
@@ -499,6 +506,10 @@ public class Process {
         return p2fleet;
     }
 
+    public List<Sector> getFleet1hulls() {
+        return fleet1hulls;
+    }
+
     public void allowPlacement(boolean allowed) {
         this.placementAllowed = allowed;
     }
@@ -513,6 +524,14 @@ public class Process {
 
     public void setSectorInProcess(Sector sect) {
         this.sectorInProcess = sect;
+    }
+
+    public int getSunkQuantity() {
+        return sunkQuantity;
+    }
+
+    public void setSunkQuantity(int sunkQuantity) {
+        this.sunkQuantity = sunkQuantity;
     }
 
     // funkcja do testów
