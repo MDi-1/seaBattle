@@ -317,11 +317,11 @@ public class Process {
 // ile zostało jednostek do zatopienia (- po trafionym zatopionym)
 
 // wyrzucanie jako text na konsolę listy obliczonych jako puste
-        service.printout(dummies, "dummies");
+        service.printout(potentialTargets, "potentialTargets");
 // usuwanie sektorów "exposed" z listy pozostałych do strzału
         if (sectorInProcess != null) {
             Sector lastShot = sectorInProcess;
-            removeSectorFromLeftToShoot(lastShot);
+            removeSector(lastShot);
 // flagowanie na puste (dummy) i potencjalne cele
             if (lastShot.getStatus().equals("exposed_hull") || lastShot.getStatus().equals("exposed_origin")) {
                 int[] dx = {-1, 0, 1, 1, 1, 0, -1, -1};
@@ -333,6 +333,12 @@ public class Process {
                     if (newX < 0 || newY < 0 || newX > 9 || newY > 9) {
                         break;
                     }
+                    for (Sector sector : leftToShoot) {
+                        if (newX == sector.getCoordinateX() && newY == sector.getCoordinateY()) {
+                            no właśnie tu będzie część wspólna
+                        }
+                    }
+
                     Sector flagged = new Sector(5, newX, newY);
                     if (swap) {
                         dummies.add(flagged);
@@ -348,7 +354,7 @@ public class Process {
             }
 // usuwanie obliczonych jako puste (dummy) z listy pozostałych do strzału
             for (Sector dummy : dummies) {
-                removeSectorFromLeftToShoot(dummy);
+                removeSector(dummy);
             }
         }
 // strzelanie do sektorów obliczonych jako potencjalne cele
@@ -378,7 +384,7 @@ public class Process {
 
 // w tej grze ta funkcja używana jest tylko przez komputer, dlatego funkcja
 // usuwa zawsze z listy "leftToShoot"
-    void removeSectorFromLeftToShoot(Sector sector) {
+    void removeSector(Sector sector) {
         int x = sector.getCoordinateX();
         int y = sector.getCoordinateY();
         leftToShoot.removeIf(
@@ -393,8 +399,6 @@ public class Process {
         for (Sector sector : sectorList) {
             if (sector.getCoordinateX() == x && sector.getCoordinateY() == y) {
                 sectorToGet = sector;
-            } else {
-                System.out.println("method findSector() have not found any sector");
             }
         } return sectorToGet;
     }
@@ -504,6 +508,10 @@ public class Process {
 
     public List<Ship> getP2fleet() {
         return p2fleet;
+    }
+
+    public List<Sector> getDummies() {
+        return dummies;
     }
 
     public List<Sector> getFleet1hulls() {

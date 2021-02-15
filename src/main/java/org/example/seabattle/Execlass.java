@@ -564,6 +564,14 @@ public class Execlass extends Application{
         rotateBtn.setFont( new Font("Arial", 20));
         grid3.add(starterBtn, 0, 4, 4, 1);
 
+        Button serviceBtn = new Button("service");
+        serviceBtn.setFont(new Font("Arial", 20));
+        grid3.add(serviceBtn, 6, 0, 4, 1);
+        Service service = new Service();
+        serviceBtn.setOnAction(e -> {
+            service.printout(process.getDummies(), "dummies");
+        });
+
         starterBtn.setOnAction(e -> {
             if (process.getGamestate() == -1) {
                 buttonActions();
@@ -589,6 +597,7 @@ public class Execlass extends Application{
             player2preparation();
             grid3.add(clearButton, 0, 2, 4, 1);
             grid3.add(refreshButton, 0, 4, 4, 1);
+            grid3.add(serviceBtn, 0, 7, 4, 1);
             grid3.add(enterButton, 0, 6, 5, 1);
             process.autoDeployAll(); //tu winien być argument którą flotę wstawić
         });
@@ -617,7 +626,6 @@ public class Execlass extends Application{
             showArea(process.getP1sectors(), grid1);
             showArea(process.getP2sectors(), grid2);
             visualCheck = false;
-            Service service = new Service();
             service.printout(process.fleet1hulls, "p1 hulls");
             service.printout(process.fleet2hulls, "p2 hulls");
         });
