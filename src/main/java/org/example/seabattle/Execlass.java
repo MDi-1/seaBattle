@@ -52,6 +52,8 @@ public class Execlass extends Application{
     private Process process = new Process();
     private final Label scCount1 = new Label("Player 1 score: " + process.getScore1());
     private final Label scCount2 = new Label("Player 2 score: " + process.getScore2());
+    Service service = new Service();
+
 
     void clearArea() {
         grid1.getChildren().clear();
@@ -388,7 +390,7 @@ public class Execlass extends Application{
     }
 
     boolean fire(Sector sector) {
-        // tu powinna być animacja strzału, ale nie będzie bo nie ma czasu.
+        List<Sector> fleetHulls = null;
         GridPane grid = null;
         int areaToShootAt = sector.getPlayer();
         int x = sector.getCoordinateX();
@@ -398,9 +400,11 @@ public class Execlass extends Application{
         String result;
         if (areaToShootAt == 1) {
             grid = grid1;
+            fleetHulls = process.getFleet1hulls();
         }
         if (areaToShootAt == 2) {
             grid = grid2;
+            fleetHulls = process.getFleet2hulls();
         }
         String status = sector.getStatus();
         switch (status) {
@@ -413,13 +417,15 @@ public class Execlass extends Application{
             case "concealed_hull":
                 result = "exposed_hull";
                 sector.setStatus(result);
-                ImageView hit = new ImageView(targetHit);
-                grid.add(hit, x, y);
+                process.removeSector(fleetHulls, sector);
+                ImageView shipHit = new ImageView(targetHit);
+                grid.add(shipHit, x, y);
                 unitHit = true;
                 break;
             case "concealed_origin":
                 result = "exposed_origin";
                 sector.setStatus(result);
+                process.removeSector(fleetHulls, sector);
                 ImageView criticalHit = new ImageView(targetHit);
                 grid.add(criticalHit, x, y);
                 unitHit = true;
@@ -578,14 +584,19 @@ public class Execlass extends Application{
         rotateBtn.setFont( new Font("Arial", 20));
         grid3.add(starterBtn, 0, 4, 4, 1);
 
-        Button serviceBtn = new Button("service");
-        serviceBtn.setFont(new Font("Arial", 20));
-        Service service = new Service();
-        serviceBtn.setOnAction(e -> {
+        Button serviceBtn1 = new Button("service1");
+        serviceBtn1.setFont(new Font("Arial", 20));
+        serviceBtn1.setOnAction(e -> {
             service.printout(process.getDummies(), "dummies");
             service.printout(process.getLeftToShoot(), "left2shoot");
-            service.printout(service.backupList, "backupList");
         });
+        Button serviceBtn2 = new Button("service2");
+        serviceBtn2.setFont(new Font("Arial", 20));
+        serviceBtn2.setOnAction(e -> {
+            service.printout(process.getFleet1hulls(), "fleet1hulls");
+            service.printout(process.getFleet2hulls(), "fleet2hulls");
+        });
+
 
         starterBtn.setOnAction(e -> {
             if (process.getGamestate() == -1) {
@@ -612,7 +623,8 @@ public class Execlass extends Application{
             player2preparation();
             grid3.add(clearButton, 0, 2, 4, 1);
             grid3.add(refreshButton, 0, 4, 4, 1);
-            grid3.add(serviceBtn, 0, 7, 4, 1);
+            grid3.add(serviceBtn1, 0, 7, 2, 1);
+            grid3.add(serviceBtn2, 3, 7, 2, 1);
             grid3.add(enterButton, 0, 6, 5, 1);
             process.autoDeployAll(); //tu winien być argument którą flotę wstawić
         });
@@ -641,8 +653,8 @@ public class Execlass extends Application{
             showArea(process.getP1sectors(), grid1);
             showArea(process.getP2sectors(), grid2);
             visualCheck = false;
-            service.printout(process.fleet1hulls, "p1 hulls");
-            service.printout(process.fleet2hulls, "p2 hulls");
+            service.printout(process.getFleet1hulls(), "p1 hulls");
+            service.printout(process.getFleet2hulls(), "p2 hulls");
         });
         Button autoButton = new Button("auto deploy");
         autoButton.setFont(new Font("Arial", 20));

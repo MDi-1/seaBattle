@@ -26,8 +26,8 @@ public class Process {
     private List<Ship> p2fleet = new ArrayList<>();
     private final String[] types = {
             "carrier", "cruiser1", "cruiser2", "sub1", "sub2", "sub3", "heli1", "heli2", "heli3", "heli4" };
-    List<Sector> fleet1hulls = new ArrayList<>();
-    List<Sector> fleet2hulls = new ArrayList<>();
+    private List<Sector> fleet1hulls = new ArrayList<>();
+    private List<Sector> fleet2hulls = new ArrayList<>();
     Service service = new Service(); // delete this as soon as app is ready for production.
     Random random = new Random();
 
@@ -377,10 +377,13 @@ public class Process {
                 currentTarget = findSector(p1sectors, leftToShoot.get(index));
 
             } else {
-                System.out.println("!ERROR! leftToShoot is empty");
-                index = random.nextInt(service.backupList.size());
-                currentTarget = findSector(p1sectors, service.backupList.get(index));
-                service.backupList.remove(service.backupList.get(index));
+                if (fleet1hulls.size() > 0) {
+                    System.out.println("!ERROR! leftToShoot is empty");
+                    Sector oneHull = fleet1hulls.get(0);
+                    currentTarget = findSector(p1sectors, oneHull);
+                } else {
+                    xxxxxxxxxx
+                }
             }
         }
         this.sectorInProcess = null;
@@ -551,6 +554,10 @@ public class Process {
 
     public List<Sector> getFleet1hulls() {
         return fleet1hulls;
+    }
+
+    public List<Sector> getFleet2hulls() {
+        return fleet2hulls;
     }
 
     public List<Sector> getLeftToShoot() {

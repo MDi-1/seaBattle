@@ -18,4 +18,5 @@ public class Service {
         }
         System.out.println("\nlist contains " + sectorList.size() + " items.\n");
     }
+
 }
