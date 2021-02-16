@@ -310,8 +310,6 @@ public class Process {
     Sector computerIsShooting(boolean wasDestroyed) {
 // trzeba napisać usuwanie sektorów- końcówek
 // jeśli komputer zorientował się że zatopił całą jednostkę
-// w sumie tą funkcjonalność można napisać dla obu graczy
-// (zwaną "trafiony zatopiony) i gracz komputerowy to wykorzysta
 
 // trzeba jeszcze podać komputerowi informację
 // ile zostało jednostek do zatopienia (- po trafionym zatopionym)
@@ -353,10 +351,6 @@ public class Process {
                 removeSector(potentialTargets, dummy);
             }
         }
-// wyrzucanie jako text na konsolę listy obliczonych jako puste
-        service.printout(dummies, "dummies");
-        service.printout(potentialTargets, "potentialTargets");
-
 // strzelanie do sektorów obliczonych jako potencjalne cele
         Sector currentTarget = null;
         int index;
@@ -404,10 +398,6 @@ public class Process {
             for (Sector sector : listToPickFrom) {
                 if (sector.getCoordinateX() == x && sector.getCoordinateY() == y) {
                     tmpList.add(sector);
-//                    char a = (char) (y + 65);
-//                    int p = sector.getPlayer();
-//                    String n = sector.getTakenBy();
-//                    System.out.print(" [" + a + (x + 1) + ",p=" + p +"," + n + "] ");
                 }
             }
         }
@@ -431,9 +421,8 @@ public class Process {
 
     int evaluate() {
         int winner = 0;
-        score1 = 20 - fleet1hulls.size();
-        score2 = 20 - fleet2hulls.size();
-//        System.out.println("score1= " + score1 + "; score2= " + score2);
+        this.score1 = 20 - fleet2hulls.size();
+        this.score2 = 20 - fleet1hulls.size();
         if (score1 > score2) {
             winner = 1;
         }
@@ -489,7 +478,7 @@ public class Process {
                 i ++;
             }
         }
-        System.out.println("  defineSunk() i=" + i + " units sunk");
+//        System.out.println("  defineSunk() i=" + i + " units sunk");
         return i;
     }
 
@@ -583,14 +572,5 @@ public class Process {
 
     public void setSunkQuantity(int sunkQuantity) {
         this.sunkQuantity = sunkQuantity;
-    }
-
-    // funkcja do testów
-    void listSectors() {
-        for (int i = 0; i < 100; i ++) {
-            String s1 = p1sectors.get(i).toString();
-            String s2 = p2sectors.get(i).toString();
-            System.out.println(s1 + "|||" + s2);
-        }
     }
 }

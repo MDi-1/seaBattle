@@ -50,8 +50,8 @@ public class Execlass extends Application{
     private int player2prepare = 1;
     private boolean visualCheck = true;
     private Process process = new Process();
-    private final Label scCount1 = new Label("Player 1 score: " + process.getScore1());
-    private final Label scCount2 = new Label("Player 2 score: " + process.getScore2());
+    private Label scCount1 = new Label();
+    private Label scCount2 = new Label();
     Service service = new Service();
 
 
@@ -66,7 +66,7 @@ public class Execlass extends Application{
         int i = process.getGamestate() + 1;
         process.setGamestate(i);
         int state = process.getGamestate();
-//        System.out.println("gamestate set to >> " + state);
+        System.out.println("gamestate set to >> " + state);
         switch (state) {
             case 0:
                 grid1.add(p1beginBtn, 2, 4, 7, 1);
@@ -456,8 +456,9 @@ public class Execlass extends Application{
         int evaluation;
         boolean destroyed = false;
         streak = fire(sector);
-        if (process.getFleet1hulls().size() < 1) {
-            evaluation = process.evaluate();
+        evaluation = process.evaluate();
+        scCount1.setText("Player 1 score: " + process.getScore1());
+        if (process.getFleet2hulls().size() < 1) {
             finish(evaluation);
         }
         if (streak)
@@ -480,35 +481,35 @@ public class Execlass extends Application{
             }
 
             // test blok
-            int x = targetSector.getCoordinateX();
-            int y = targetSector.getCoordinateY();
-            char a = (char) (y + 65);
-            System.out.println(" !!! computer is shooting at " + a  + (x + 1));
+//            int x = targetSector.getCoordinateX();
+//            int y = targetSector.getCoordinateY();
+//            char a = (char) (y + 65);
+//            System.out.println(" !!! computer is shooting at " + a  + (x + 1));
 
             streak = fire(targetSector);
-            if (process.getFleet2hulls().size() < 1) {
-                evaluation = process.evaluate();
+            evaluation = process.evaluate();
+            scCount2.setText("Player 2 score: " + process.getScore2());
+            if (process.getFleet1hulls().size() < 1) {
                 finish(evaluation);
+                return;
             }
         } while (streak);
         process.setGamestate(3);
     }
 
     void finish(int player) {
-        int evaluation;
-        if (player == 0) {
-            evaluation = process.evaluate();
-            player = evaluation;
-        }
         process.setGamestate(5);
         grid2.getChildren().clear();
         visualCheck = true;
         showArea(process.getP1sectors(), grid1);
         showArea(process.getP2sectors(), grid2);
         grid3.getChildren().remove(starterBtn);
-        grid3.add(enterButton, 0, 6, 5, 1);
         label1.setText("END OF GAME");
-        label2.setText("Player " + player + " wins.");
+        if (player == 0) {
+            label2.setText("The Draw");
+        } else {
+            label2.setText("Player " + player + " wins.");
+        }
     }
 
     @Override
@@ -647,10 +648,7 @@ public class Execlass extends Application{
 
         clearButton.setFont(new Font("Arial", 20));
         grid2.add(clearButton, 4, 8, 4, 1);
-        clearButton.setOnAction(e -> {
-            clearArea();
-            process.listSectors();
-        });
+        clearButton.setOnAction(e -> clearArea());
         refreshButton.setFont(new Font("Arial", 20));
         grid2.add(refreshButton, 0, 8, 4, 1);
         refreshButton.setOnAction(e -> {
@@ -720,4 +718,3 @@ public class Execlass extends Application{
         launch(args);
     }
 }
-// task - na koniec pousuwać wszystkie niepotrzebne "System.out.print"
