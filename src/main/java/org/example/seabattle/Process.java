@@ -382,7 +382,6 @@ public class Process {
                     Sector oneHull = fleet1hulls.get(0);
                     currentTarget = findSector(p1sectors, oneHull);
                 } else {
-                    xxxxxxxxxx
                 }
             }
         }
@@ -431,26 +430,20 @@ public class Process {
     }
 
     int evaluate() {
-        score1 = score2 = 0;
-        for (Sector s2 : p2sectors) {
-            if (s2.getStatus().equals("exposed_hull") || s2.getStatus().equals("exposed_origin")) {
-                score1 ++;
-            }
-        }
-        for (Sector s1 : p1sectors) {
-            if (s1.getStatus().equals("exposed_hull") || s1.getStatus().equals("exposed_origin")) {
-                score2 ++;
-            }
-        }
+        int winner = 0;
+        score1 = 20 - fleet1hulls.size();
+        score2 = 20 - fleet2hulls.size();
 //        System.out.println("score1= " + score1 + "; score2= " + score2);
-        if (score1 >= 20 || score2 >= 20) {
-            if (score1 > score2) {
-                return 1;
-            }
-            if (score2 > score1) {
-                return 2;
-            }
-        } return 0;
+        if (score1 > score2) {
+            winner = 1;
+        }
+        if (score2 > score1) {
+            winner = 2;
+        }
+        if (score1 == score2) {
+            winner = 0;
+        }
+        return winner;
     }
 
     int defineSunk(int playerToShootAt) {

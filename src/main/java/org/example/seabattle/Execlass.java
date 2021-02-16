@@ -453,8 +453,13 @@ public class Execlass extends Application{
 
     void nextTurn(Sector sector) {
         boolean streak;
+        int evaluation;
         boolean destroyed = false;
         streak = fire(sector);
+        if (process.getFleet1hulls().size() < 1) {
+            evaluation = process.evaluate();
+            finish(evaluation);
+        }
         if (streak)
             return;
         process.setGamestate(4);
@@ -481,12 +486,12 @@ public class Execlass extends Application{
             System.out.println(" !!! computer is shooting at " + a  + (x + 1));
 
             streak = fire(targetSector);
+            if (process.getFleet2hulls().size() < 1) {
+                evaluation = process.evaluate();
+                finish(evaluation);
+            }
         } while (streak);
         process.setGamestate(3);
-        int evaluation = process.evaluate();
-        if (evaluation != 0) {
-            finish(evaluation);
-        }
     }
 
     void finish(int player) {
