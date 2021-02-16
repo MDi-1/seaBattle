@@ -1,8 +1,11 @@
 package org.example.seabattle;
 
+import java.util.LinkedList;
 import java.util.List;
 
 public class Service {
+    List<Sector> backupList = new LinkedList<>();
+
     void printout(List<Sector> sectorList, String header) {
         System.out.println("list title: " + header);
         for (Sector sector : sectorList) {

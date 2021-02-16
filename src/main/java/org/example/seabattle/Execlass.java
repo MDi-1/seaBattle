@@ -64,7 +64,7 @@ public class Execlass extends Application{
         int i = process.getGamestate() + 1;
         process.setGamestate(i);
         int state = process.getGamestate();
-        System.out.println("gamestate set to >> " + state);
+//        System.out.println("gamestate set to >> " + state);
         switch (state) {
             case 0:
                 grid1.add(p1beginBtn, 2, 4, 7, 1);
@@ -227,6 +227,7 @@ public class Execlass extends Application{
             int player = readSector.getPlayer();
             int x = readSector.getCoordinateX();
             int y = readSector.getCoordinateY();
+            List<Ship> exeFleet = null;
 
             switch (status) {
                 case "proximity":
@@ -241,11 +242,24 @@ public class Execlass extends Application{
                     ImageView cross = new ImageView(targetHit);
                     grid.add(cross, x, y);
                     break;
-                case "origin":
+
                 case "exposed_origin":
+                    if (player == 1) {
+                        exeFleet = process.getP1fleet();
+                    }
+                    if (player == 2) {
+                        exeFleet = process.getP2fleet();
+                    }
+                    for (Ship revealedShip : exeFleet) {
+                        if (x == revealedShip.getLocationX() && y == revealedShip.getLocationY()) {
+                            placeShipImg(readSector, revealedShip, grid);
+                        }
+                    }
+                    ImageView hit = new ImageView(targetHit);
+                    grid.add(hit, x, y);
+                case "origin":
                 case "concealed_origin": // te 3 ostatnie "case" zrobić tu porządek
                     if (visualCheck) {
-                        List<Ship> exeFleet = null;
                         if (player == 1) {
                             exeFleet = process.getP1fleet();
                         }
@@ -258,8 +272,8 @@ public class Execlass extends Application{
                             }
                         }
                     } else {
-                        ImageView hit = new ImageView(targetHit);
-                        grid.add(hit, x, y);
+                        ImageView hit1 = new ImageView(targetHit);
+                        grid.add(hit1, x, y);
                     }
                 default:
             }
@@ -341,7 +355,7 @@ public class Execlass extends Application{
     }
 
     void createShootablePanes() {
-        System.out.println("f. createShootablePanes invoked");
+//        System.out.println("f. createShootablePanes invoked");
         Rectangle reticle = new Rectangle(30, 30, Color.TRANSPARENT);
         reticle.setX(8);
         reticle.setY(8);
@@ -432,21 +446,21 @@ public class Execlass extends Application{
     }
 
     void nextTurn(Sector sector) {
-
         boolean streak;
+        boolean destroyed = false;
         streak = fire(sector);
         if (streak)
             return;
         process.setGamestate(4);
         do {//gdy dodamy możliwość grania na 2 os.- dodać warunek do computerIsShooting()
             int sunkCheck = process.getSunkQuantity();
-            boolean destroyed = false;
             int sunkAmount = process.defineSunk(1);
             process.setSunkQuantity(sunkAmount);
             if (sunkCheck != process.getSunkQuantity()) {
                 destroyed = true;
             } // spróbować zebrać sunkCheck w zewn. funkcję
             // sunkCheck w tym miejscu działa na razie tylko dla komputera
+            System.out.println("destroyed=" + destroyed);
             Sector targetSector = process.computerIsShooting(destroyed);
             try {
                 Thread.sleep(100);
@@ -458,7 +472,7 @@ public class Execlass extends Application{
             int x = targetSector.getCoordinateX();
             int y = targetSector.getCoordinateY();
             char a = (char) (y + 65);
-            System.out.println("computer is shooting at " + a  + (x + 1));
+            System.out.println(" !!! computer is shooting at " + a  + (x + 1));
 
             streak = fire(targetSector);
         } while (streak);
@@ -566,10 +580,11 @@ public class Execlass extends Application{
 
         Button serviceBtn = new Button("service");
         serviceBtn.setFont(new Font("Arial", 20));
-        grid3.add(serviceBtn, 6, 0, 4, 1);
         Service service = new Service();
         serviceBtn.setOnAction(e -> {
             service.printout(process.getDummies(), "dummies");
+            service.printout(process.getLeftToShoot(), "left2shoot");
+            service.printout(service.backupList, "backupList");
         });
 
         starterBtn.setOnAction(e -> {
