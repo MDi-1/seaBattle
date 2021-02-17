@@ -19,54 +19,42 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Execlass extends Application{
-    // później przenieść pliki png gdzieś gdzie będą dostępne po kompilacji (poza src)
-    private final Image field = new Image("file:src/main/resources/field.png");
-    private final Image x1unit = new Image("file:src/main/resources/unit1.png");
-    private final Image x2unit = new Image("file:src/main/resources/unit2.png");
-    private final Image x3unit = new Image("file:src/main/resources/unit3v2.png");
-    private final Image x4unit = new Image("file:src/main/resources/unit4.png");
-    private final Image splash = new Image("file:src/main/resources/splash.png");
-    private final Image targetHit = new Image("file:src/main/resources/cross.png");
-    private final Image proximity = new Image("file:src/main/resources/proximity.png");
+    private final Image field = new Image("file:Res/field.png");
+    private final Image x1unit = new Image("file:Res/unit1.png");
+    private final Image x2unit = new Image("file:Res/unit2.png");
+    private final Image x3unit = new Image("file:Res/unit3v2.png");
+    private final Image x4unit = new Image("file:Res/unit4.png");
+    private final Image splash = new Image("file:Res/splash.png");
+    private final Image targetHit = new Image("file:Res/cross.png");
+    private final Image proximity = new Image("file:Res/proximity.png");
     private final Label label1 = new Label(" [ SEA BATTLE ] ");
     private final Label label2 = new Label("");
-    private GridPane grid1 = new GridPane();
-    private GridPane grid2 = new GridPane();
-    private GridPane grid3 = new GridPane();
-    private Button starterBtn = new Button("START GAME");
-    private Button p1beginBtn = new Button("PLAYER 1  DEPLOY UNITS");
-    private Button p2beginBtn = new Button("PLAYER 1 DEPLOYMENT FINISHED");
-    private Button activateAiBtn = new Button("PLAY AGAINST COMPUTER");
-    private Button enterButton = new Button("ENTER THE BATTLE");
-    private Button rotateBtn  = new Button("ROTATE");
-    Button clearButton = new Button("clear");
-    Button refreshButton = new Button("refresh");
-    private Rotate rotate = new Rotate();
-    private List<Integer> hullSectors = new ArrayList<>();
-    private Pane[] sidePaneArray = new Pane[4];
+    private final GridPane grid1 = new GridPane();
+    private final GridPane grid2 = new GridPane();
+    private final GridPane grid3 = new GridPane();
+    private final Button starterBtn = new Button("START GAME");
+    private final Button p1beginBtn = new Button("PLAYER 1  DEPLOY UNITS");
+    private final Button p2beginBtn = new Button("PLAYER 1 DEPLOYMENT FINISHED");
+    private final Button activateAiBtn = new Button("PLAY AGAINST COMPUTER");
+    private final Button enterButton = new Button("ENTER THE BATTLE");
+    private final Button autoButton = new Button("auto deploy");
+    private final Button rotateBtn  = new Button("ROTATE");
+    private final Rotate rotate = new Rotate();
+    private final Pane[] sidePaneArray = new Pane[4];
     Pane[] paneArrayP1 = new Pane[100];
     Pane[] paneArrayP2 = new Pane[100];
     private final Label[] unitCounter = new Label[4];
     private int player2prepare = 1;
     private boolean visualCheck = true;
-    private Process process = new Process();
-    private Label scCount1 = new Label();
-    private Label scCount2 = new Label();
-    Service service = new Service();
-
-
-    void clearArea() {
-        grid1.getChildren().clear();
-        if (process.getGamestate() > 1) {
-            grid2.getChildren().clear();
-        }
-    }
+    private final Process process = new Process();
+    private final Label scCount1 = new Label();
+    private final Label scCount2 = new Label();
+    private final List<Integer> hullSectors = new ArrayList<>();
 
     void buttonActions() {
         int i = process.getGamestate() + 1;
         process.setGamestate(i);
         int state = process.getGamestate();
-        System.out.println("gamestate set to >> " + state);
         switch (state) {
             case 0:
                 grid1.add(p1beginBtn, 2, 4, 7, 1);
@@ -75,6 +63,7 @@ public class Execlass extends Application{
                 label2.setText("");
                 break;
             case 1:
+                grid2.add(autoButton, 3, 0, 4, 1);
                 grid3.add(rotateBtn, 1, 8, 3, 1);
                 grid2.add(p2beginBtn, 1, 4, 8, 1);
                 label1.setText("click on the right panel");
@@ -180,8 +169,6 @@ public class Execlass extends Application{
         }
     }
 
-    // później tutaj można dać łapanie wyjątku "out of bounds" gdy wywołana lista nie jest jeszcze utworzona albo
-    // wywołana pickUnit() w switch-u nie działa z innych powodów
     void placeShipImg(Sector sector, Ship exeShip, GridPane grid) {
         int x = sector.getCoordinateX();
         int y = sector.getCoordinateY();
@@ -189,7 +176,7 @@ public class Execlass extends Application{
         int offset = (unitSize + 1) / 4;
         int heading = exeShip.getHeading();
         if (((heading == 270) && (x - offset < 0 || y < 0)) || (heading == 0) && (x < 0 || (y - offset < 0))) {
-            return; // zapobieganie NPE
+            return;
         }
         hullSectors.clear();
         Image imageName = null;
@@ -260,7 +247,7 @@ public class Execlass extends Application{
                     ImageView hit = new ImageView(targetHit);
                     grid.add(hit, x, y);
                 case "origin":
-                case "concealed_origin": // te 3 ostatnie "case" zrobić tu porządek
+                case "concealed_origin":
                     if (visualCheck) {
                         if (player == 1) {
                             exeFleet = process.getP1fleet();
@@ -357,7 +344,6 @@ public class Execlass extends Application{
     }
 
     void createShootablePanes() {
-//        System.out.println("f. createShootablePanes invoked");
         Rectangle reticle = new Rectangle(30, 30, Color.TRANSPARENT);
         reticle.setX(8);
         reticle.setY(8);
@@ -389,6 +375,7 @@ public class Execlass extends Application{
         }
     }
 
+    // transforms sectors when they are shot
     boolean fire(Sector sector) {
         List<Sector> fleetHulls = null;
         GridPane grid = null;
@@ -445,12 +432,11 @@ public class Execlass extends Application{
             if (unitHit) {
                 label1.setText("Your unit was hit at: " + a  + (x + 1));
             }
-            // setSectorInProcess attribute is used by computer player.
-            // When 2 human players functionality is introduced this line has to be changed.
             process.setSectorInProcess(sector);
         } return unitHit;
     }
 
+    // primary method responsible for logic during gameplay
     void nextTurn(Sector sector) {
         boolean streak;
         int evaluation;
@@ -464,28 +450,19 @@ public class Execlass extends Application{
         if (streak)
             return;
         process.setGamestate(4);
-        do {//gdy dodamy możliwość grania na 2 os.- dodać warunek do computerIsShooting()
+        do {
             int sunkCheck = process.getSunkQuantity();
             int sunkAmount = process.defineSunk(1);
             process.setSunkQuantity(sunkAmount);
             if (sunkCheck != process.getSunkQuantity()) {
                 destroyed = true;
-            } // spróbować zebrać sunkCheck w zewn. funkcję
-            // sunkCheck w tym miejscu działa na razie tylko dla komputera
-            System.out.println("destroyed=" + destroyed);
+            }
             Sector targetSector = process.computerIsShooting(destroyed);
             try {
                 Thread.sleep(100);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-
-            // test blok
-//            int x = targetSector.getCoordinateX();
-//            int y = targetSector.getCoordinateY();
-//            char a = (char) (y + 65);
-//            System.out.println(" !!! computer is shooting at " + a  + (x + 1));
-
             streak = fire(targetSector);
             evaluation = process.evaluate();
             scCount2.setText("Player 2 score: " + process.getScore2());
@@ -505,7 +482,7 @@ public class Execlass extends Application{
         showArea(process.getP2sectors(), grid2);
         grid3.getChildren().remove(starterBtn);
         label1.setText("END OF GAME");
-        if (player == 0) {
+        if (player == 0 && process.getGamestate() == 5) {
             label2.setText("The Draw");
         } else {
             label2.setText("Player " + player + " wins.");
@@ -513,7 +490,7 @@ public class Execlass extends Application{
     }
 
     @Override
-    public void start(Stage primaryStage) /* throws Exception */ {
+    public void start(Stage primaryStage) {
 
         BackgroundSize backgroundSize = new BackgroundSize(100, 100, true, true, true, false);
         BackgroundImage backgroundImage = new BackgroundImage(
@@ -550,11 +527,6 @@ public class Execlass extends Application{
             grid2.getColumnConstraints().add(cConstr);
             grid2.getRowConstraints().add(rowConstr);
         }
-        // siatka do usunięcia później
-        grid0.setGridLinesVisible(true);
-        grid1.setGridLinesVisible(true);
-        grid2.setGridLinesVisible(true);
-        grid3.setGridLinesVisible(true);
 
         int index1 = 0;
         for (Sector sector : process.getP1sectors()) {
@@ -566,8 +538,6 @@ public class Execlass extends Application{
             createClickablePanes(paneArrayP2, sector, index2, grid2);
             index2++;
         }
-        // FIXME - podczas ustawiania jednostek zostają zielone kwadraty, a nie powinny.
-        // czy da się napisać tak by lambda podała "e" do pick() ?
 
         label1.setPadding(new Insets(0, 50, 50, 50));
         label1.setFont(new Font("Arial", 32));
@@ -590,32 +560,20 @@ public class Execlass extends Application{
         rotateBtn.setFont( new Font("Arial", 20));
         grid3.add(starterBtn, 0, 4, 4, 1);
 
-        Button serviceBtn1 = new Button("service1");
-        serviceBtn1.setFont(new Font("Arial", 20));
-        serviceBtn1.setOnAction(e -> {
-            service.printout(process.getDummies(), "dummies");
-            service.printout(process.getLeftToShoot(), "left2shoot");
-        });
-        Button serviceBtn2 = new Button("service2");
-        serviceBtn2.setFont(new Font("Arial", 20));
-        serviceBtn2.setOnAction(e -> {
-            service.printout(process.getFleet1hulls(), "fleet1hulls");
-            service.printout(process.getFleet2hulls(), "fleet2hulls");
-        });
-
-
         starterBtn.setOnAction(e -> {
             if (process.getGamestate() == -1) {
                 buttonActions();
             } else {
-                finish(0);
+                process.setGamestate(5);
+                int evaluation = process.evaluate();
+                finish(evaluation);
             }
         });
         p1beginBtn.setOnAction(e -> buttonActions());
         p2beginBtn.setOnAction(e -> {
             grid1.getChildren().clear();
             grid3.getChildren().clear();
-            p2beginBtn.setText("PLAYER 2  DEPLOY UNITS");
+            grid2.getChildren().remove(p2beginBtn);
             if (player2prepare == 2) {
                 buttonActions();
             } else {
@@ -627,12 +585,8 @@ public class Execlass extends Application{
             buttonActions();
             grid3.getChildren().clear();
             player2preparation();
-            grid3.add(clearButton, 0, 2, 4, 1);
-            grid3.add(refreshButton, 0, 4, 4, 1);
-            grid3.add(serviceBtn1, 0, 7, 2, 1);
-            grid3.add(serviceBtn2, 3, 7, 2, 1);
             grid3.add(enterButton, 0, 6, 5, 1);
-            process.autoDeployAll(); //tu winien być argument którą flotę wstawić
+            process.autoDeployAll();
         });
         rotateBtn.setOnAction(e -> {
             hullSectors.clear();
@@ -646,22 +600,7 @@ public class Execlass extends Application{
             visualCheck = false;
         });
 
-        clearButton.setFont(new Font("Arial", 20));
-        grid2.add(clearButton, 4, 8, 4, 1);
-        clearButton.setOnAction(e -> clearArea());
-        refreshButton.setFont(new Font("Arial", 20));
-        grid2.add(refreshButton, 0, 8, 4, 1);
-        refreshButton.setOnAction(e -> {
-            visualCheck = true;
-            showArea(process.getP1sectors(), grid1);
-            showArea(process.getP2sectors(), grid2);
-            visualCheck = false;
-            service.printout(process.getFleet1hulls(), "p1 hulls");
-            service.printout(process.getFleet2hulls(), "p2 hulls");
-        });
-        Button autoButton = new Button("auto deploy");
         autoButton.setFont(new Font("Arial", 20));
-        grid2.add(autoButton, 0, 0, 4, 1);
         autoButton.setOnAction(e -> {
             visualCheck = true;
             process.autoDeployAll();
@@ -674,28 +613,6 @@ public class Execlass extends Application{
             updateUnitCounter();
             visualCheck = false;
         });
-        Button resetButton = new Button("reset deployment");
-        resetButton.setFont(new Font("Arial", 20));
-        grid2.add(resetButton, 0, 2, 4, 1);
-        resetButton.setOnAction(e -> {
-            clearArea();
-            showArea(process.getP1sectors(), grid1);
-            showArea(process.getP2sectors(), grid2);
-            updateUnitCounter();
-        });
-        Button autoStepDeplBtn = new Button("auto deploy step by step");
-        autoStepDeplBtn.setFont(new Font("Arial", 20));
-        grid2.add(autoStepDeplBtn, 6, 0, 4, 1);
-        autoStepDeplBtn.setOnAction(e -> {
-            process.autoDeploySingleUnit();
-            if (process.getGamestate() == 1) {
-                showArea(process.getP1sectors(), grid1);
-            }
-            if (process.getGamestate() == 2) {
-                showArea(process.getP2sectors(), grid2);
-            }
-            updateUnitCounter();
-        });
 
         grid0.add(grid1, 0, 0);
         grid0.add(grid2, 1, 0);
@@ -707,7 +624,6 @@ public class Execlass extends Application{
         RowConstraints constrY560 = new RowConstraints(560);
         grid0.getRowConstraints().add(constrY560);
         grid0.getColumnConstraints().add(constrX460);
-
 
         Scene scene = new Scene(grid0, 1400, 720, Color.BLACK);
         primaryStage.setTitle("seaBattle");
